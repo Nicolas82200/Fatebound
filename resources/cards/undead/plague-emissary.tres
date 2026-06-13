@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://btt32gx5l5ldc"]
+
+[ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card_data.gd" id="1_bwyol"]
+[ext_resource type="Texture2D" uid="uid://bqr176760a1ut" path="res://assets/card_art/plague-emissary.jpg" id="2_bwyol"]
+
+[resource]
+script = ExtResource("1_bwyol")
+card_name = "Émissaire de la Peste"
+description = "À l'entrée: -2 ATK à un ennemi"
+texture = ExtResource("2_bwyol")
+cost = 4
+attack = 3
+health = 4
+trigger_type = "Battlecry"
+effect_target = ""
+rarity = "Rare"
+metadata/_custom_type_script = "uid://bru7ohxxvloht"

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://bmtgo41dfroy7"]
+
+[ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card_data.gd" id="1_eg45v"]
+[ext_resource type="Texture2D" uid="uid://btsa8jlp51onq" path="res://assets/card_art/flesh-gnawer.jpg" id="2_eg45v"]
+
+[resource]
+script = ExtResource("1_eg45v")
+card_name = "Rongeur de chair"
+texture = ExtResource("2_eg45v")
+cost = 4
+attack = 5
+health = 3
+effect_target = ""
+rarity = "Rare"
+metadata/_custom_type_script = "uid://bru7ohxxvloht"

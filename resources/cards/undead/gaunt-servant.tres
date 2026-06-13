@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://bjainjwq067fv"]
+
+[ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card_data.gd" id="1_rccce"]
+[ext_resource type="Texture2D" uid="uid://c5416bpk11u24" path="res://assets/card_art/gaunt-servant.jpg" id="2_rccce"]
+
+[resource]
+script = ExtResource("1_rccce")
+card_name = "Servant décharné"
+texture = ExtResource("2_rccce")
+cost = 3
+attack = 2
+health = 4
+effect_target = ""
+metadata/_custom_type_script = "uid://bru7ohxxvloht"

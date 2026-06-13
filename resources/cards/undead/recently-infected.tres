@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://q2whv0fxsegx"]
+
+[ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card_data.gd" id="1_rgw62"]
+[ext_resource type="Texture2D" uid="uid://bj33rf2olkgr7" path="res://assets/card_art/recently-infected.jpg" id="2_rgw62"]
+
+[resource]
+script = ExtResource("1_rgw62")
+card_name = "Infecté récent"
+description = "Mort-rage: +1/+0"
+texture = ExtResource("2_rgw62")
+cost = 2
+attack = 2
+health = 2
+effect_target = ""
+metadata/_custom_type_script = "uid://bru7ohxxvloht"

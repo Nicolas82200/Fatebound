@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://cxfwuk60mgnqp"]
+
+[ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card_data.gd" id="1_hcyin"]
+[ext_resource type="Texture2D" uid="uid://cf2qgnx4y0chp" path="res://assets/card_art/wandering-corpse.jpg" id="2_ykcco"]
+
+[resource]
+script = ExtResource("1_hcyin")
+card_name = "Cadavre errant"
+texture = ExtResource("2_ykcco")
+cost = 2
+attack = 1
+health = 3
+effect_target = ""
+metadata/_custom_type_script = "uid://bru7ohxxvloht"

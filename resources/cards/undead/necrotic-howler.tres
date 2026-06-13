@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://ccmj02bo0b606"]
+
+[ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card_data.gd" id="1_8ftak"]
+[ext_resource type="Texture2D" uid="uid://wlbxq1mjqkit" path="res://assets/card_art/necrotic-howler.jpg" id="2_8ftak"]
+
+[resource]
+script = ExtResource("1_8ftak")
+card_name = "Hurleur nécrotique"
+description = "À l'entrée: zombies alliés +1/+0"
+texture = ExtResource("2_8ftak")
+cost = 3
+attack = 3
+health = 2
+trigger_type = "Battlecry"
+effect_target = ""
+rarity = "Rare"
+metadata/_custom_type_script = "uid://bru7ohxxvloht"

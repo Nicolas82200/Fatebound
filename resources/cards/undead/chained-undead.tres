@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://c5y2itgp2bsqi"]
+
+[ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card_data.gd" id="1_nrniu"]
+[ext_resource type="Texture2D" uid="uid://dxdd1cq5his5i" path="res://assets/card_art/chained-undead.jpg" id="2_nrniu"]
+
+[resource]
+script = ExtResource("1_nrniu")
+card_name = "Mort-vivant enchaîné"
+texture = ExtResource("2_nrniu")
+cost = 3
+attack = 3
+health = 3
+effect_target = ""
+metadata/_custom_type_script = "uid://bru7ohxxvloht"

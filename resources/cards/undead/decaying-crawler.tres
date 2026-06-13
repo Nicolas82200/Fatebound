@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://dfjgwjglj13uu"]
+
+[ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card_data.gd" id="1_spbpv"]
+[ext_resource type="Texture2D" uid="uid://coltgcriu3r0e" path="res://assets/card_art/decaying-crawler.jpg" id="2_jfat4"]
+
+[resource]
+script = ExtResource("1_spbpv")
+card_name = "Rampant en Décomposition"
+description = "Mort: infecte une carte du deck adverse (devient Zombie 1/1)"
+texture = ExtResource("2_jfat4")
+attack = 1
+health = 1
+trigger_type = "Deathrattle"
+effect_target = ""
+metadata/_custom_type_script = "uid://bru7ohxxvloht"

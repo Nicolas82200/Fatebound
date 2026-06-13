@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://ca85lqx1ae8mw"]
+
+[ext_resource type="Script" uid="uid://bf3ok38jprbg5" path="res://scripts/minion/Minion.gd" id="1_l6qfs"]
+
+[node name="Minion" type="Node" unique_id=1262068003]
+script = ExtResource("1_l6qfs")

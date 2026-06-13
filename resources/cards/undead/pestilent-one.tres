@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://bco65paahtfkp"]
+
+[ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card_data.gd" id="1_vu33q"]
+[ext_resource type="Texture2D" uid="uid://fpcyvm18xlbm" path="res://assets/card_art/pestilent-one.jpg" id="2_vu33q"]
+
+[resource]
+script = ExtResource("1_vu33q")
+card_name = "Pestilent"
+description = "À l'entrée: infecte un ennemi (-1 PV/tour)"
+texture = ExtResource("2_vu33q")
+attack = 1
+health = 2
+trigger_type = "Battlecry"
+effect_target = ""
+rarity = "Rare"
+metadata/_custom_type_script = "uid://bru7ohxxvloht"

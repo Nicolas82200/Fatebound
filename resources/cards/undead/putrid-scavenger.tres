@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://byne6c40e4qjb"]
+
+[ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card_data.gd" id="1_jrpt4"]
+[ext_resource type="Texture2D" uid="uid://b1nblg7vufyu4" path="res://assets/card_art/putrid-scavenger.jpg" id="2_jrpt4"]
+
+[resource]
+script = ExtResource("1_jrpt4")
+card_name = "Charognard putride"
+texture = ExtResource("2_jrpt4")
+cost = 2
+attack = 3
+health = 1
+effect_target = ""
+metadata/_custom_type_script = "uid://bru7ohxxvloht"
