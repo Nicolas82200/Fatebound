@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://6a2f85a5a186"]
+
+[ext_resource type="Script" uid="uid://ddqetdlahmfmu" path="res://scripts/card/CardEffect.gd" id="1_cardeffect"]
+[ext_resource type="Texture2D" uid="uid://r4buja5gqqte" path="res://assets/card_art/decayed-colossus.jpg" id="2_texture"]
+[ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card/CardData.gd" id="3_carddata"]
+
+[resource]
+script = ExtResource("3_carddata")
+card_name = "Colosse Décomposé"
+description = "Aucun effet particulier. Un colosse massif fait de cadavres fusionnés."
+texture = ExtResource("2_texture")
+cost = 6
+attack = 7
+health = 7
+rarity = "Epic"
+metadata/_custom_type_script = "uid://bru7ohxxvloht"

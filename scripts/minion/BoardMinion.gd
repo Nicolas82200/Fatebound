@@ -17,7 +17,7 @@ signal minion_clicked(minion, board_minion)
 
 var _highlight_style: StyleBoxFlat
 var _race_style: StyleBoxFlat
-var _bg_style: StyleBoxFlat
+
 
 const BORDER_RACE_COLORS := {
 	"Undead": Color("342e1ae1"),
@@ -52,34 +52,21 @@ func _ready():
 func set_minion(new_minion: Minion):
 	minion = new_minion
 	update_display()
-
-
-func update_attack_state():
-	if minion.can_attack:
-		modulate = Color.WHITE
-	else:
-		modulate = Color(0.6, 0.6, 0.6)
-
+	attack_label.text = str(minion.attack)
+	health_label.text = str(minion.health)
 
 func update_display():
 	if minion == null:
 		return
-
+	modulate = Color.WHITE if minion.can_attack() else Color(0.5, 0.5, 0.5)
 	name_label.text = minion.card_data.card_name
 	attack_label.text = "ATK : " + str(minion.attack)
 	health_label.text = "HP : " + str(max(minion.health, 0))
-
 	if minion.card_data.texture:
 		art.texture = minion.card_data.texture
-
 	protection_icon.visible = minion.has_protection
-
-	update_attack_state()
-
 	var race = minion.card_data.race
 	_race_style.border_color = BORDER_RACE_COLORS.get(race, Color.WHITE)
-
-
 
 func _gui_input(event):
 	if event is InputEventMouseButton \

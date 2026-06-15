@@ -1,16 +1,17 @@
-[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://d4e5o41pytwoy"]
+[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://bada1c15a28aa"]
 
-[ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card_data.gd" id="1_jnbmy"]
-[ext_resource type="Texture2D" uid="uid://cm588mcsqh0rw" path="res://assets/card_art/shield-zombie.jpg" id="2_jnbmy"]
+[ext_resource type="Script" uid="uid://ddqetdlahmfmu" path="res://scripts/card/CardEffect.gd" id="1_cardeffect"]
+[ext_resource type="Texture2D" uid="uid://cm588mcsqh0rw" path="res://assets/card_art/shield-zombie.jpg" id="2_texture"]
+[ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card/CardData.gd" id="3_carddata"]
 
 [resource]
-script = ExtResource("1_jnbmy")
-card_name = "Zombie bouclier"
-texture = ExtResource("2_jnbmy")
+script = ExtResource("3_carddata")
+card_name = "Zombie Bouclier"
+description = "Provocation. Un zombie blindé qui protège ses alliés."
+texture = ExtResource("2_texture")
 cost = 2
 attack = 1
 health = 5
 has_taunt = true
-effect_target = ""
 rarity = "Rare"
 metadata/_custom_type_script = "uid://bru7ohxxvloht"

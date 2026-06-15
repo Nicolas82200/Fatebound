@@ -1,18 +1,25 @@
-[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://xnuevl1udygm"]
+[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://f286a53375f4"]
 
-[ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card_data.gd" id="1_0a5hn"]
-[ext_resource type="Texture2D" uid="uid://dym83qrgjsljp" path="res://assets/card_art/zombified-cultist.jpg" id="2_0a5hn"]
+[ext_resource type="Script" uid="uid://ddqetdlahmfmu" path="res://scripts/card/CardEffect.gd" id="1_cardeffect"]
+[ext_resource type="Texture2D" uid="uid://dym83qrgjsljp" path="res://assets/card_art/zombified-cultist.jpg" id="2_texture"]
+[ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card/CardData.gd" id="3_carddata"]
+[ext_resource type="Resource" uid="uid://4fba8d4b6883" path="res://resources/cards/undead/wandering-corpse.tres" id="4_summon_wanderingcorpse"]
+
+[sub_resource type="Resource" id="Resource_eff0"]
+script = ExtResource("1_cardeffect")
+effect_id = "SummonMinion"
+summon_card = ExtResource("4_summon_wanderingcorpse")
+metadata/_custom_type_script = "uid://ddqetdlahmfmu"
 
 [resource]
-script = ExtResource("1_0a5hn")
-card_name = "Cultiste zombifié"
-description = "Mort: invoque un Cadavre Errant"
-texture = ExtResource("2_0a5hn")
+script = ExtResource("3_carddata")
+card_name = "Cultiste Zombifié"
+description = "Mort: invoque un Cadavre Errant sur le plateau."
+texture = ExtResource("2_texture")
 cost = 2
 attack = 1
 health = 1
-has_charge = true
-trigger_type = "Battlecry"
-effect_target = ""
+trigger_type = "Deathrattle"
+effects = Array[ExtResource("1_cardeffect")]([SubResource("Resource_eff0")])
 rarity = "Rare"
 metadata/_custom_type_script = "uid://bru7ohxxvloht"
