@@ -1,17 +1,8 @@
-<<<<<<< HEAD
 [gd_resource type="Resource" script_class="CardData" format=3 uid="uid://mrw6gg5r55eh"]
 
 [ext_resource type="Script" uid="uid://ddqetdlahmfmu" path="res://scripts/card/CardEffect.gd" id="1_cardeffect"]
 [ext_resource type="Script" uid="uid://cbo6rhh3g8djf" path="res://scripts/card/KeywordChoice.gd" id="2_kw"]
 [ext_resource type="Texture2D" uid="uid://hc3swe9m4rmqs" path="res://assets/card_art/undead/deadrider.jpg" id="3_texture"]
-=======
-[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://8546bvbke53h"]
-
-[ext_resource type="Script" uid="uid://ddqetdlahmfmu" path="res://scripts/card/CardEffect.gd" id="1_cardeffect"]
-[ext_resource type="Script" uid="uid://ibfjbfqajwqd" path="res://scripts/card/KeywordChoiceHuman.gd" id="2_gfkm1"]
-[ext_resource type="Script" uid="uid://cbo6rhh3g8djf" path="res://scripts/card/KeywordChoice.gd" id="2_kw"]
-[ext_resource type="Texture2D" path="res://assets/card_art/undead/deadrider.jpg" id="3_texture"]
->>>>>>> dev
 [ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card/CardData.gd" id="4_carddata"]
 [ext_resource type="Script" uid="uid://ib4p8n6y0r0j" path="res://scripts/card/TriggerTypeChoice.gd" id="5_trig"]
 
@@ -34,10 +25,7 @@ description = "ASSAUT. Arrivée : attaque immédiatement le serviteur ennemi le 
 flavour_text = "Le cheval est mort avant lui. Ni l'un ni l'autre ne s'en est rendu compte."
 texture = ExtResource("3_texture")
 cost = 4
-<<<<<<< HEAD
 race = 4
-=======
->>>>>>> dev
 unit_style = 4
 attack = 4
 health = 3
