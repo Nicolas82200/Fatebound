@@ -8,7 +8,7 @@
 
 [resource]
 script = ExtResource("3_wgmki")
-card_name = "Conscrit"
+card_name = "Conscript"
 flavour_text = "Il n'a pas choisi de venir. Il est venu quand même."
 texture = ExtResource("4_6ifys")
 race = 1

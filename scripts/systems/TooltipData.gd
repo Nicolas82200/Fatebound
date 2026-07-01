@@ -280,6 +280,13 @@ func build_panels_for_card(card_data: CardData, parent: Node) -> Array[Control]:
 		parent.add_child(panel)
 		panels.append(panel)
 
+	# 4. Description de race, comme sur le board
+	if RACE_DESCRIPTIONS.has(card_data.race):
+		var race_panel := make_race_tooltip(RACE_DESCRIPTIONS[card_data.race])
+		race_panel.position = Vector2(-9999, -9999)
+		parent.add_child(race_panel)
+		panels.append(race_panel)
+
 	return panels
 
 func _effect_title(effect_id: String) -> String:

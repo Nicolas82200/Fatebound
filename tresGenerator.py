@@ -206,6 +206,7 @@ def make_tres(filename, card_uid, race, unit_style_int,
     print(f"  ✅ {filename}")
 
 # ─── MORT-VIVANTS ─────────────────────────────────────────────────────────────
+OUT = UNDEAD_DIR
 print("\n=== MORT-VIVANTS ===")
 DECAYING = "res://resources/cards/undead/decaying-crawler.tres"
 WANDERING = "res://resources/cards/undead/wandering-corpse.tres"
@@ -943,6 +944,7 @@ make_tres("doomed-whisper.tres", uid(), RACE_UNDEAD, 0,
     "Rare", "Front")
 
 # ─── HUMAINS ──────────────────────────────────────────────────────────────────
+OUT = HUMAN_DIR
 print("\n=== HUMAINS ===")
 
 def human_tex(name): return f"res://assets/card_art/human/{name}.jpg"

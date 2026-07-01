@@ -60,8 +60,11 @@ func _trigger_deathrattle(dead_minions: Array[Minion]) -> void:
 func _trigger_death_reactions(dead_minions: Array[Minion], dead_were_player: bool) -> void:
 	if dead_minions.is_empty():
 		return
-	var same_camp: Array[Minion]  = battle.player_minions if dead_were_player else battle.enemy_minions
-	var other_camp: Array[Minion] = battle.enemy_minions if dead_were_player else battle.player_minions
+	# .duplicate() : ces réactions (ex. Mort-rage) peuvent invoquer de nouveaux
+	# serviteurs dans ces mêmes tableaux — itérer sur la référence live ferait
+	# boucler sur les serviteurs fraîchement invoqués dans la même passe.
+	var same_camp: Array[Minion]  = (battle.player_minions if dead_were_player else battle.enemy_minions).duplicate()
+	var other_camp: Array[Minion] = (battle.enemy_minions if dead_were_player else battle.player_minions).duplicate()
 
 	# Deuil (OnGrief) : un ALLIÉ vient de mourir → survivants du même camp réagissent
 	for minion in same_camp:

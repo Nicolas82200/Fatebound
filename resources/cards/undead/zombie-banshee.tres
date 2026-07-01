@@ -1,34 +1,33 @@
-[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://stcffp6dytp5"]
+[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://b7adrvjipu1de"]
 
 [ext_resource type="Script" uid="uid://ddqetdlahmfmu" path="res://scripts/card/CardEffect.gd" id="1_cardeffect"]
 [ext_resource type="Script" uid="uid://cbo6rhh3g8djf" path="res://scripts/card/KeywordChoice.gd" id="2_kw"]
-[ext_resource type="Texture2D" uid="uid://bout23hf0rhrf" path="res://assets/card_art/undead/banshee.jpg" id="3_texture"]
 [ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card/CardData.gd" id="4_carddata"]
 [ext_resource type="Script" uid="uid://ib4p8n6y0r0j" path="res://scripts/card/TriggerTypeChoice.gd" id="5_trig"]
 
-[sub_resource type="Resource" id="Resource_es4vw"]
+[sub_resource type="Resource" id="Resource_zbnsh1"]
+script = ExtResource("5_trig")
+type = "ONPLAY"
+
+[sub_resource type="Resource" id="Resource_zbnsh2"]
 script = ExtResource("1_cardeffect")
 effect_id = "Silence"
 target = "EnemyMinion"
 metadata/_custom_type_script = "uid://ddqetdlahmfmu"
 
-[sub_resource type="Resource" id="Resource_y62xq"]
-script = ExtResource("5_trig")
-type = "ONPLAY"
-
 [resource]
 script = ExtResource("4_carddata")
 card_name = "Banshee Zombie"
 description = "Arrivée : silence un serviteur ennemi ciblé jusqu'à fin du prochain tour adverse."
-flavour_text = "Elle hurle sans voix. Ceux qu'elle regarde oublient comment parler."
-texture = ExtResource("3_texture")
+flavour_text = "Son cri n'a pas de son. Il n'en a plus besoin."
 cost = 4
-unit_style = 3
+race = 4
+unit_style = 0
 attack = 2
 health = 5
-trigger_types = Array[ExtResource("5_trig")]([SubResource("Resource_y62xq")])
-effects = Array[ExtResource("1_cardeffect")]([SubResource("Resource_es4vw")])
+trigger_types = Array[ExtResource("5_trig")]([SubResource("Resource_zbnsh1")])
+effects = Array[ExtResource("1_cardeffect")]([SubResource("Resource_zbnsh2")])
 requires_target = true
 rarity = "Rare"
-board_position = "Hybrid"
+board_position = "Back"
 metadata/_custom_type_script = "uid://bru7ohxxvloht"

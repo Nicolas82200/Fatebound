@@ -296,28 +296,30 @@ func _on_back() -> void:
 
 func _style_button(btn: Button) -> void:
 	var normal := StyleBoxFlat.new()
-	normal.bg_color                   = Color("1a1a2eaa")
+	normal.bg_color                   = Color("1f1b2fdd")
 	normal.border_width_left          = 2
 	normal.border_width_right         = 2
 	normal.border_width_top           = 2
 	normal.border_width_bottom        = 2
 	normal.border_color               = Color("8b6914")
-	normal.corner_radius_top_left     = 6
-	normal.corner_radius_top_right    = 6
-	normal.corner_radius_bottom_left  = 6
-	normal.corner_radius_bottom_right = 6
+	normal.corner_radius_top_left     = 8
+	normal.corner_radius_top_right    = 8
+	normal.corner_radius_bottom_left  = 8
+	normal.corner_radius_bottom_right = 8
+	normal.shadow_size                = 4
+	normal.shadow_color               = Color(0, 0, 0, 0.2)
 	btn.add_theme_stylebox_override("normal", normal)
 	var hover := normal.duplicate() as StyleBoxFlat
-	hover.bg_color     = Color("2a2a4ecc")
+	hover.bg_color     = Color("304060ee")
 	hover.border_color = Color("c9a227")
 	btn.add_theme_stylebox_override("hover", hover)
 	var pressed_style := normal.duplicate() as StyleBoxFlat
-	pressed_style.bg_color     = Color("0d0d1eee")
+	pressed_style.bg_color     = Color("131726ee")
 	pressed_style.border_color = Color("f0c040")
 	btn.add_theme_stylebox_override("pressed", pressed_style)
 	btn.add_theme_color_override("font_color",       Color("e8d5a3"))
 	btn.add_theme_color_override("font_hover_color", Color("fff5d6"))
-	btn.add_theme_font_size_override("font_size", 16)
+	btn.add_theme_font_size_override("font_size", 15)
 
 # ─── Tooltips — délégués à TooltipData ───────────────────────────────────────
 

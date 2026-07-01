@@ -1,12 +1,13 @@
-[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://hp2yqg6k3t1x"]
+[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://cgbs3fh3rbjrh"]
 
 [ext_resource type="Script" uid="uid://ddqetdlahmfmu" path="res://scripts/card/CardEffect.gd" id="1_cardeffect"]
 [ext_resource type="Script" uid="uid://cbo6rhh3g8djf" path="res://scripts/card/KeywordChoice.gd" id="2_kw"]
+[ext_resource type="Script" uid="uid://ibfjbfqajwqd" path="res://scripts/card/KeywordChoiceHuman.gd" id="2_wxesf"]
 [ext_resource type="Texture2D" uid="uid://co1iyt61656pg" path="res://assets/card_art/human/great-mobilization.jpg" id="3_texture"]
 [ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card/CardData.gd" id="4_carddata"]
 [ext_resource type="Script" uid="uid://ib4p8n6y0r0j" path="res://scripts/card/TriggerTypeChoice.gd" id="5_trig"]
 
-[sub_resource type="Resource" id="Resource_yf6cn"]
+[sub_resource type="Resource" id="Resource_tbyom"]
 script = ExtResource("1_cardeffect")
 effect_id = "SummonRandom"
 count = 4
@@ -21,6 +22,6 @@ texture = ExtResource("3_texture")
 cost = 8
 race = 1
 card_type = "Ritual"
-effects = Array[ExtResource("1_cardeffect")]([SubResource("Resource_yf6cn")])
+effects = Array[ExtResource("1_cardeffect")]([SubResource("Resource_tbyom")])
 rarity = "Legendary"
 metadata/_custom_type_script = "uid://bru7ohxxvloht"

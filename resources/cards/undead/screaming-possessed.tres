@@ -1,21 +1,22 @@
-[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://diw6jhg8rll4x"]
+[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://6yhvlxanajup1"]
 
 [ext_resource type="Script" uid="uid://ddqetdlahmfmu" path="res://scripts/card/CardEffect.gd" id="1_cardeffect"]
 [ext_resource type="Script" uid="uid://cbo6rhh3g8djf" path="res://scripts/card/KeywordChoice.gd" id="2_kw"]
-[ext_resource type="Texture2D" uid="uid://ggcot8cle2p7" path="res://assets/card_art/undead/screaming-possessed.jpg" id="3_texture"]
+[ext_resource type="Texture2D" uid="uid://o24ds2kh63iqk" path="res://assets/card_art/undead/screaming-possessed.jpg" id="3_texture"]
 [ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card/CardData.gd" id="4_carddata"]
 [ext_resource type="Script" uid="uid://ib4p8n6y0r0j" path="res://scripts/card/TriggerTypeChoice.gd" id="5_trig"]
 
-[sub_resource type="Resource" id="Resource_lv5ii"]
+[sub_resource type="Resource" id="Resource_mfh53"]
 script = ExtResource("2_kw")
 name_fr = "Assaut"
 
-[sub_resource type="Resource" id="Resource_uxx7u"]
+[sub_resource type="Resource" id="Resource_mia09"]
 script = ExtResource("2_kw")
 name_fr = "Venin mortel"
 
-[sub_resource type="Resource" id="Resource_zva7e"]
+[sub_resource type="Resource" id="Resource_7wz7f"]
 script = ExtResource("5_trig")
+type = "DEATHRATTLE"
 
 [resource]
 script = ExtResource("4_carddata")
@@ -24,9 +25,11 @@ description = "ASSAUT. VENIN MORTEL. Dernier Souffle : retiré du jeu (ne va pas
 flavour_text = "Même les morts refusent de le reprendre."
 texture = ExtResource("3_texture")
 cost = 3
+race = 4
+unit_style = 0
 attack = 5
 health = 1
-keywords = Array[ExtResource("2_kw")]([SubResource("Resource_lv5ii"), SubResource("Resource_uxx7u")])
-trigger_types = Array[ExtResource("5_trig")]([SubResource("Resource_zva7e")])
+keywords = Array[ExtResource("2_kw")]([SubResource("Resource_mfh53"), SubResource("Resource_mia09")])
+trigger_types = Array[ExtResource("5_trig")]([SubResource("Resource_7wz7f")])
 rarity = "Rare"
 metadata/_custom_type_script = "uid://bru7ohxxvloht"

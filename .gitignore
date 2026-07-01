@@ -4,3 +4,4 @@
 .import/
 export_preserts.cfg
 .tmp
+.venv

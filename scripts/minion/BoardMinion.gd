@@ -47,6 +47,8 @@ var _battle: Node = null
 
 func _ready() -> void:
 	_battle = get_tree().current_scene
+	if _battle == null:
+		push_warning("BoardMinion: scène de bataille introuvable au démarrage")
 
 	# [FIX] Chaque instance crée son propre StyleBoxFlat — pas de partage accidentel
 	_highlight_style = StyleBoxFlat.new()
@@ -163,7 +165,10 @@ func _on_mouse_entered() -> void:
 		return
 	_hover_preview.drag_enabled = false
 	_hover_preview.z_index = 1000
-	_battle.add_child(_hover_preview)
+	if _battle != null:
+		_battle.add_child(_hover_preview)
+	else:
+		add_child(_hover_preview)
 	_hover_preview.set_data(minion.card_data)
 	_hover_preview.scale = Vector2(0.9, 0.9)
 	await get_tree().process_frame
@@ -219,21 +224,23 @@ func _show_keyword_tooltips(base_x: float, base_y_override: float = -1.0) -> voi
 		base_y += panel.size.y + 6
 		_keyword_tooltips.append(panel)
 
-	if TooltipData.RACE_DESCRIPTIONS.has(minion.card_data.race):
-		if not is_instance_valid(_tooltip_layer):
-			return
-		var race_panel := TooltipData.make_race_tooltip(TooltipData.RACE_DESCRIPTIONS[minion.card_data.race])
-		race_panel.position = Vector2(-9999, -9999)
-		_tooltip_layer.add_child(race_panel)
-		await get_tree().process_frame
-		if is_instance_valid(race_panel) and is_instance_valid(_hover_preview):
-			var preview_bottom  := _hover_preview.global_position.y + _hover_preview.size.y * 0.9
-			var preview_center_x := _hover_preview.global_position.x + (_hover_preview.size.x * 0.9) / 2.0
-			race_panel.global_position = Vector2(
-				preview_center_x - race_panel.size.x / 2.0,
-				preview_bottom + 6
-			)
-			_keyword_tooltips.append(race_panel)
+	if not is_instance_valid(_tooltip_layer):
+		return
+	await get_tree().process_frame
+	if is_instance_valid(_hover_preview):
+		var preview_bottom  := _hover_preview.global_position.y + _hover_preview.size.y * 0.9
+		var preview_center_x := _hover_preview.global_position.x + (_hover_preview.size.x * 0.9) / 2.0
+		for panel in _keyword_tooltips:
+			if not is_instance_valid(panel):
+				continue
+			if panel is PanelContainer and panel.get_child_count() > 0 and panel.get_child(0) is Label:
+				var label: Label = panel.get_child(0)
+				if label.text == TooltipData.RACE_DESCRIPTIONS.get(minion.card_data.race, ""):
+					panel.global_position = Vector2(
+						preview_center_x - panel.size.x / 2.0,
+						preview_bottom + 6
+					)
+					break
 
 func _hide_keyword_tooltips() -> void:
 	for tooltip in _keyword_tooltips:

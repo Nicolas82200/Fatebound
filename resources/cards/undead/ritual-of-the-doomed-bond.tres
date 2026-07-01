@@ -1,30 +1,33 @@
-[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://cqt3x1eqh4m0l"]
+[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://cl6y8sthncvis"]
 
 [ext_resource type="Script" uid="uid://ddqetdlahmfmu" path="res://scripts/card/CardEffect.gd" id="1_cardeffect"]
 [ext_resource type="Script" uid="uid://cbo6rhh3g8djf" path="res://scripts/card/KeywordChoice.gd" id="2_kw"]
-[ext_resource type="Texture2D" uid="uid://1ci028ox53wb" path="res://assets/card_art/undead/ritual-of-the-dommed-bond.jpg" id="3_texture"]
 [ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card/CardData.gd" id="4_carddata"]
 [ext_resource type="Script" uid="uid://ib4p8n6y0r0j" path="res://scripts/card/TriggerTypeChoice.gd" id="5_trig"]
 
-[sub_resource type="Resource" id="Resource_nax22"]
+[sub_resource type="Resource" id="Resource_doombond1"]
+script = ExtResource("5_trig")
+type = "OnGrief"
+
+[sub_resource type="Resource" id="Resource_doombond2"]
 script = ExtResource("1_cardeffect")
+effect_id = "Damage"
 target = "EnemyHero"
 value = 2
 metadata/_custom_type_script = "uid://ddqetdlahmfmu"
-
-[sub_resource type="Resource" id="Resource_tv32m"]
-script = ExtResource("5_trig")
-type = "OnGrief"
 
 [resource]
 script = ExtResource("4_carddata")
 card_name = "Rituel du Lien Funeste"
 description = "3 tours : Deuil : inflige 2 dégâts au héros ennemi."
-flavour_text = "Chaque allié qui tombe tire un fil. L'ennemi finit par sentir la traction."
-texture = ExtResource("3_texture")
+flavour_text = "Chaque mort resserre le lien. L'ennemi le sentira aussi."
 cost = 4
+race = 4
+unit_style = 0
 card_type = "Ritual"
-trigger_types = Array[ExtResource("5_trig")]([SubResource("Resource_tv32m")])
-effects = Array[ExtResource("1_cardeffect")]([SubResource("Resource_nax22")])
+attack = 0
+health = 0
+trigger_types = Array[ExtResource("5_trig")]([SubResource("Resource_doombond1")])
+effects = Array[ExtResource("1_cardeffect")]([SubResource("Resource_doombond2")])
 rarity = "Epic"
 metadata/_custom_type_script = "uid://bru7ohxxvloht"

@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://lnrrrw8c0rb5"]
+[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://y34n94c7l339a"]
 
 [ext_resource type="Script" uid="uid://ddqetdlahmfmu" path="res://scripts/card/CardEffect.gd" id="1_cardeffect"]
 [ext_resource type="Script" uid="uid://cbo6rhh3g8djf" path="res://scripts/card/KeywordChoice.gd" id="2_kw"]
-[ext_resource type="Texture2D" uid="uid://ceykdm17gquep" path="res://assets/card_art/undead/necrotic-breath.jpg" id="3_texture"]
+[ext_resource type="Texture2D" uid="uid://axug15tw2seyh" path="res://assets/card_art/undead/necrotic-breath.jpg" id="3_texture"]
 [ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card/CardData.gd" id="4_carddata"]
 [ext_resource type="Script" uid="uid://ib4p8n6y0r0j" path="res://scripts/card/TriggerTypeChoice.gd" id="5_trig"]
 
-[sub_resource type="Resource" id="Resource_3bb2x"]
+[sub_resource type="Resource" id="Resource_vakx7"]
 script = ExtResource("1_cardeffect")
+effect_id = "Damage"
 target = "EnemyMinion"
 value = 2
 metadata/_custom_type_script = "uid://ddqetdlahmfmu"
@@ -19,7 +20,11 @@ description = "2 dégâts à un serviteur ennemi ciblé."
 flavour_text = "Ce n'est pas du vent. C'est ce qui reste quand les poumons ne servent plus à rien."
 texture = ExtResource("3_texture")
 cost = 2
+race = 4
+unit_style = 0
 card_type = "Instant"
-effects = Array[ExtResource("1_cardeffect")]([SubResource("Resource_3bb2x")])
+attack = 0
+health = 0
+effects = Array[ExtResource("1_cardeffect")]([SubResource("Resource_vakx7")])
 requires_target = true
 metadata/_custom_type_script = "uid://bru7ohxxvloht"

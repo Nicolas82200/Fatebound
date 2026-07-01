@@ -18,7 +18,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.78431374)
+color = Color(0, 0, 0, 0.78)
 
 [node name="CenterContainer" type="CenterContainer" parent="." unique_id=200000002]
 layout_mode = 1
@@ -28,38 +28,60 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="CenterContainer" unique_id=200000003]
-custom_minimum_size = Vector2(600, 0)
+[node name="Panel" type="Panel" parent="CenterContainer" unique_id=200000003]
+custom_minimum_size = Vector2(760, 560)
 layout_mode = 2
-theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="CenterContainer/VBox" unique_id=200000004]
+[node name="VBox" type="VBoxContainer" parent="CenterContainer/Panel" unique_id=200000004]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 28.0
+offset_top = 24.0
+offset_right = -28.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="CenterContainer/Panel/VBox" unique_id=200000005]
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(0.91, 0.835, 0.639, 1)
+theme_override_font_sizes/font_size = 34
 text = "Mes Decks"
 horizontal_alignment = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/VBox" unique_id=200000005]
-custom_minimum_size = Vector2(600, 400)
+[node name="Subtitle" type="Label" parent="CenterContainer/Panel/VBox" unique_id=200000006]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.67, 0.48, 1)
+theme_override_font_sizes/font_size = 16
+text = "Choisis, édite ou crée un deck pour la campagne"
+horizontal_alignment = 1
 
-[node name="DecksContainer" type="VBoxContainer" parent="CenterContainer/VBox/ScrollContainer" unique_id=200000006]
+[node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/Panel/VBox" unique_id=200000007]
+custom_minimum_size = Vector2(700, 380)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="DecksContainer" type="VBoxContainer" parent="CenterContainer/Panel/VBox/ScrollContainer" unique_id=200000008]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
-[node name="ButtonRow" type="HBoxContainer" parent="CenterContainer/VBox" unique_id=200000007]
+[node name="ButtonRow" type="HBoxContainer" parent="CenterContainer/Panel/VBox" unique_id=200000009]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 10
 
-[node name="BackButton" type="Button" parent="CenterContainer/VBox/ButtonRow" unique_id=200000008]
+[node name="BackButton" type="Button" parent="CenterContainer/Panel/VBox/ButtonRow" unique_id=200000010]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Retour"
 
-[node name="CreateButton" type="Button" parent="CenterContainer/VBox/ButtonRow" unique_id=200000009]
+[node name="CreateButton" type="Button" parent="CenterContainer/Panel/VBox/ButtonRow" unique_id=200000011]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3

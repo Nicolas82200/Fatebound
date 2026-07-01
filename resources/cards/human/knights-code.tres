@@ -1,19 +1,20 @@
-[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://q7q7kror0qy3"]
+[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://de880a6xa7a0p"]
 
 [ext_resource type="Script" uid="uid://ddqetdlahmfmu" path="res://scripts/card/CardEffect.gd" id="1_cardeffect"]
+[ext_resource type="Script" uid="uid://ibfjbfqajwqd" path="res://scripts/card/KeywordChoiceHuman.gd" id="2_5kafw"]
 [ext_resource type="Script" uid="uid://cbo6rhh3g8djf" path="res://scripts/card/KeywordChoice.gd" id="2_kw"]
 [ext_resource type="Texture2D" uid="uid://dgpbm38y70wbe" path="res://assets/card_art/human/knight-code.jpg" id="3_texture"]
 [ext_resource type="Script" uid="uid://bru7ohxxvloht" path="res://scripts/card/CardData.gd" id="4_carddata"]
 [ext_resource type="Script" uid="uid://ib4p8n6y0r0j" path="res://scripts/card/TriggerTypeChoice.gd" id="5_trig"]
 
-[sub_resource type="Resource" id="Resource_8ombo"]
+[sub_resource type="Resource" id="Resource_tzyzj"]
 script = ExtResource("1_cardeffect")
 effect_id = "Buff"
 target = "AllAllies"
 value = 1
 metadata/_custom_type_script = "uid://ddqetdlahmfmu"
 
-[sub_resource type="Resource" id="Resource_s68t0"]
+[sub_resource type="Resource" id="Resource_r4rci"]
 script = ExtResource("5_trig")
 type = "OnAttack"
 
@@ -26,7 +27,7 @@ texture = ExtResource("3_texture")
 cost = 5
 race = 1
 card_type = "Ritual"
-trigger_types = Array[ExtResource("5_trig")]([SubResource("Resource_s68t0")])
-effects = Array[ExtResource("1_cardeffect")]([SubResource("Resource_8ombo")])
+trigger_types = Array[ExtResource("5_trig")]([SubResource("Resource_r4rci")])
+effects = Array[ExtResource("1_cardeffect")]([SubResource("Resource_tzyzj")])
 rarity = "Epic"
 metadata/_custom_type_script = "uid://bru7ohxxvloht"

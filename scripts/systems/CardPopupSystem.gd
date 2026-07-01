@@ -7,6 +7,8 @@ const DISPLAY_DURATION = 3
 var battle
 var _popup_layer: CanvasLayer
 var _persistent_card: Card = null
+var _popup_anchor_x: float = 24.0
+var _popup_anchor_y_offset: float = 0.0
 
 func init(_battle) -> void:
 	battle = _battle
@@ -41,13 +43,17 @@ func show_card_popup(card_data: CardData) -> void:
 
 	await card.get_tree().process_frame
 	card.pivot_offset = card.size / 2.0
-	card.position = (battle.get_viewport().get_visible_rect().size - card.size) / 2.0
+	var viewport_size: Vector2 = battle.get_viewport().get_visible_rect().size
+	card.position = Vector2(_popup_anchor_x, (viewport_size.y - card.size.y) / 2.0 + _popup_anchor_y_offset)
+	card.position.x = -card.size.x
 
 	card.scale = Vector2(0.5, 0.5)
 	card.modulate.a = 0.0
 	dim.modulate.a = 0.0
 	var t_in = card.create_tween().set_parallel(true)
-	t_in.tween_property(card, "scale", Vector2(1.1, 1.1), 0.2)\
+	t_in.tween_property(card, "position:x", _popup_anchor_x, 0.2)\
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	t_in.tween_property(card, "scale", Vector2(1.05, 1.05), 0.2)\
 		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	t_in.tween_property(card, "modulate:a", 1.0, 0.15)
 	t_in.tween_property(dim, "modulate:a", 1.0, 0.15)
@@ -59,6 +65,8 @@ func show_card_popup(card_data: CardData) -> void:
 	await battle.get_tree().create_timer(DISPLAY_DURATION).timeout
 
 	var t_out = card.create_tween().set_parallel(true)
+	t_out.tween_property(card, "position:x", -card.size.x, 0.15)\
+		.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
 	t_out.tween_property(card, "scale", Vector2(0.8, 0.8), 0.15)\
 		.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
 	t_out.tween_property(card, "modulate:a", 0.0, 0.15)
@@ -82,14 +90,14 @@ func show_targeting_popup(card_data: CardData) -> void:
 	await card.get_tree().process_frame
 
 	var viewport_size: Vector2 = battle.get_viewport().get_visible_rect().size
-	card.position = Vector2(24.0, (viewport_size.y - card.size.y) / 2.0)
+	card.position = Vector2(_popup_anchor_x, (viewport_size.y - card.size.y) / 2.0 + _popup_anchor_y_offset)
 	card.pivot_offset = card.size / 2.0
 	card.position.x = -card.size.x
 	card.modulate.a = 0.0
 	_persistent_card = card
 
 	var t = card.create_tween().set_parallel(true)
-	t.tween_property(card, "position:x", 24.0, 0.25)\
+	t.tween_property(card, "position:x", _popup_anchor_x, 0.25)\
 		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	t.tween_property(card, "modulate:a", 1.0, 0.2)
 	await t.finished
