@@ -283,7 +283,10 @@ func try_cancel_spell(caster_is_player: bool, target: Minion) -> bool:
 			continue
 		# PACTE : le paiement (par annulation) conditionne l'annulation elle-même ;
 		# refusé, le sort n'est pas annulé par CE rituel mais la charge est quand
-		# même consommée (il a réagi à l'évènement).
+		# même consommée (il a réagi à l'évènement). Comme partout ailleurs pour
+		# PACTE, les effets "base" (hors annulation elle-même et hors bonus) de la
+		# carte s'exécutent quand même en cas de refus — voir activate_sacrifice_ritual.
+		var proxy := _make_proxy(card_data, owner_is_player)
 		var pact_value: int = card_data.get_demon_keyword_value(KeywordDemon.Type.PACTE)
 		if pact_value > 0:
 			var pact_paid: bool = await battle.pact_choice_system.resolve_trigger(card_data, owner_is_player)
@@ -291,10 +294,13 @@ func try_cancel_spell(caster_is_player: bool, target: Minion) -> bool:
 			if not is_instance_valid(battle):
 				return false
 			if not pact_paid:
+				for effect in card_data.effects:
+					if effect.effect_id == "CancelSpellOnRaceTarget" or effect.pact_bonus:
+						continue
+					await battle.effect_manager.execute_effect(battle, proxy, effect)
 				_consume_ritual_charge(entry, owner_is_player)
 				continue
 			await battle.hero_system.self_damage(owner_is_player, pact_value)
-		var proxy := _make_proxy(card_data, owner_is_player)
 		# Aucun autre appel n'affiche de popup pour l'annulation elle-même : les
 		# autres effets passent par execute_effect (qui affiche déjà la popup),
 		# mais CancelSpellOnRaceTarget est explicitement sauté ci-dessous.
