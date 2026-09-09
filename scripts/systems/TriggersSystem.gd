@@ -45,10 +45,20 @@ func reset_once_per_turn(is_player: bool) -> void:
 	for entry in _enchantments[is_player]:
 		entry["triggered_this_turn"] = false
 
+# Ne retire qu'UNE SEULE entrée correspondant à card_data (jamais toutes) :
+# deux exemplaires du même Rituel/Enchantement (jusqu'à 4 en deck) partagent
+# la même ressource CardData (voir execute_enchantment_targeted_effect), donc
+# une comparaison par égalité matche les deux à la fois. Un `filter()` qui les
+# retirerait toutes désenregistrerait le second exemplaire encore actif alors
+# qu'EnchantmentSystem.remove_enchantment ne retire qu'une seule entrée de sa
+# propre liste et qu'un seul visuel — l'entrée restante devenait un rituel
+# "zombie" : toujours visible sur le plateau mais plus jamais déclenché.
 func unregister_enchantment(card_data: CardData, is_player: bool) -> void:
-	_enchantments[is_player] = _enchantments[is_player].filter(
-		func(e): return e["card_data"] != card_data
-	)
+	var list: Array = _enchantments[is_player]
+	for i in list.size():
+		if list[i]["card_data"] == card_data:
+			list.remove_at(i)
+			break
 	if battle.hand != null:
 		battle.hand.refresh_costs()
 
