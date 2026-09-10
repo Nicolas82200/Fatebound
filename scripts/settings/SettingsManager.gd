@@ -80,6 +80,12 @@ var referral_prompt_seen: bool = false
 # pas de synchronisation backend, contrairement à la collection/monnaie
 # (voir CollectionManager/CurrencyManager). Compte les matchs solo comme
 # réseau, tutoriel exclu (voir Battle._show_game_over).
+# Journal de combat (voir CombatLogSystem.entries) de la toute dernière
+# partie jouée — mémoire uniquement, jamais persisté sur disque (référence
+# des Texture2D des cartes, contrairement à match_history/account_xp ci-
+# dessous). Alimente le bouton "Voir le replay" de GameOverScreen ; vide dès
+# le lancement d'une nouvelle partie ou la fermeture du jeu.
+var last_match_log: Array = []
 var match_wins: int = 0
 var match_losses: int = 0
 # Série de victoires consécutives sans jamais passer sous 20 PV de héros

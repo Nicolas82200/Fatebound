@@ -689,11 +689,13 @@ func _show_game_over(result: String) -> void:
 		return
 	if result == "victory" or result == "defeat":
 		SettingsManager.record_match_result(result == "victory")
+	SettingsManager.last_match_log = combat_log.entries.duplicate()
 	if result == "victory":
 		AchievementManager.on_victory(self)
 	elif result == "defeat":
 		AchievementManager.on_defeat()
 	game_over_screen.show_result(result, network_manager == null)
+	game_over_screen.set_replay_available(not SettingsManager.last_match_log.is_empty())
 	MatchResultReporter.report(result, network_manager, net_client_match_id, net_opponent_backend_id, game_over_screen,
 			cards_played_by_race, deck_races)
 

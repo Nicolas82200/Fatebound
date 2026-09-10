@@ -451,6 +451,8 @@ battle.gameover.disconnect_sub,"Ton adversaire a quitté la partie.","Your oppon
 battle.gameover.replay,"Rejouer","Play again"
 battle.gameover.menu,"Menu principal","Main menu"
 battle.gameover.reward,"+%d monnaie gagnée","+%d currency earned"
+battle.gameover.view_replay,"Voir le replay","View replay"
+battle.gameover.replay_title,"Replay — Journal de combat","Replay — Combat log"
 battle.log.title,"Journal de combat","Combat log"
 loading.cards,"Chargement des cartes...","Loading cards..."
 loading.profile,"Chargement du profil...","Loading profile..."
