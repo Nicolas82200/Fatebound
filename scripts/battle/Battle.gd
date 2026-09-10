@@ -678,6 +678,35 @@ func _can_attack_hero(attacker: Minion) -> bool:
 
 # ─── Fin de partie ────────────────────────────────────────────────────────────
 
+# Réglage "Auto-passe du tour" (voir SettingsManager.auto_pass_turn) : ne
+# déclenche la fin de tour automatique QUE dans le cas sans ambiguïté où main
+# vide + aucun serviteur ne peut plus attaquer — jamais sur une simple estimation
+# d'affordabilité, pour ne jamais couper un tour où une action resterait
+# possible. Ne couvre donc pas le cas rare (mais inoffensif) d'un Rituel de
+# Sacrifice encore activable avec la main vide et plus aucune attaque.
+# Appelé après chaque carte jouée par CardSystem/Battle.play_resource_card et
+# après chaque résolution d'attaque par SelectionSystem.
+func check_auto_pass_turn() -> void:
+	if not SettingsManager.auto_pass_turn:
+		return
+	if not _can_auto_pass_now():
+		return
+	await get_tree().create_timer(0.6).timeout
+	# Re-vérifie après le délai : l'état a pu changer entre-temps (Dernier
+	# Souffle qui repioche une carte, mort différée, etc.).
+	if _can_auto_pass_now():
+		turn_system.end_turn()
+
+func _can_auto_pass_now() -> bool:
+	if game_over or enemy_turn_active or reconnecting or waiting_for_target or _mulligan_active:
+		return false
+	if not hand_cards.is_empty():
+		return false
+	for m in player_minions:
+		if not m.is_dead() and m.can_attack():
+			return false
+	return true
+
 func check_game_end() -> void:
 	if game_over:
 		return
