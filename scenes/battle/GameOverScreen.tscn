@@ -109,6 +109,12 @@ custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 text = "Rejouer"
 
+[node name="AddFriendButton" type="Button" parent="Panel/VBox/ButtonsMargin/ButtonsVBox"]
+visible = false
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Ajouter comme ami"
+
 [node name="MenuButton" type="Button" parent="Panel/VBox/ButtonsMargin/ButtonsVBox"]
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2

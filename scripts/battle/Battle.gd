@@ -331,6 +331,7 @@ func _connect_signals() -> void:
 	settings_menu.concede_requested.connect(_on_quit_match)
 	game_over_screen.menu_requested.connect(_on_quit_match)
 	game_over_screen.replay_requested.connect(_on_replay_match)
+	game_over_screen.add_friend_requested.connect(_on_add_friend_pressed)
 	# Cliquer sur un deck n'a pas d'action : pas de son de clic
 	deck_button.set_meta("no_click_sound", true)
 	enemy_deck_button.set_meta("no_click_sound", true)
@@ -689,13 +690,22 @@ func _show_game_over(result: String) -> void:
 		return
 	if result == "victory" or result == "defeat":
 		SettingsManager.record_match_result(result == "victory")
+		SettingsManager.award_account_xp(SettingsManager.ACCOUNT_XP_WIN if result == "victory" else SettingsManager.ACCOUNT_XP_LOSS)
+		if network_manager != null:
+			var opponent_name := network_manager.remote_display_name()
+			if opponent_name != "":
+				SettingsManager.record_recent_opponent(opponent_name)
 	if result == "victory":
 		AchievementManager.on_victory(self)
 	elif result == "defeat":
 		AchievementManager.on_defeat()
-	game_over_screen.show_result(result, network_manager == null)
+	game_over_screen.show_result(result, network_manager == null, network_manager != null)
 	MatchResultReporter.report(result, network_manager, net_client_match_id, net_opponent_backend_id, game_over_screen,
 			cards_played_by_race, deck_races)
+
+func _on_add_friend_pressed() -> void:
+	if network_manager != null:
+		network_manager.open_add_friend_overlay()
 
 # ─── Drag ─────────────────────────────────────────────────────────────────────
 

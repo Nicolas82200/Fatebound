@@ -63,6 +63,8 @@ const DECK_COMP_PREVIEW_SCALE := DECK_COMP_PREVIEW_SIZE / CARD_BASE_SIZE
 @onready var steam_name_label: Label = $NavPanel/NavMargin/NavStack/MainNavView/PlayerStatusPanel/PlayerMargin/PlayerVBox/SteamProfile/NameLabel
 @onready var currency_label: Label = $NavPanel/NavMargin/NavStack/MainNavView/PlayerStatusPanel/PlayerMargin/PlayerVBox/CurrencyRow/CurrencyLabel
 @onready var rank_badge_label: Label = $NavPanel/NavMargin/NavStack/MainNavView/PlayerStatusPanel/PlayerMargin/PlayerVBox/RankBadgeLabel
+@onready var account_level_label: Label = %AccountLevelLabel
+@onready var account_level_bar: ProgressBar = %AccountLevelBar
 @onready var profile_button: Button = $NavPanel/NavMargin/NavStack/MainNavView/PlayerStatusPanel/ProfileButton
 
 @onready var discord_button: TextureButton = $FooterPanel/FooterMargin/FooterRow/DiscordButton
@@ -231,6 +233,8 @@ func _ready() -> void:
 	SettingsManager.match_stats_changed.connect(func(wins: int, losses: int):
 		profile_match_stats_label.text = SettingsManager.t("MENU_MATCH_STATS") % [wins, losses]
 	)
+	SettingsManager.account_xp_changed.connect(func(_xp: int): _update_account_level_display())
+	_update_account_level_display()
 	NewsPanel.load_news(self)
 	_start_backend_sync()
 	_wire_nav_active_indicators()
@@ -332,6 +336,11 @@ func _update_nav_active_indicators(view: InfoView) -> void:
 # lancement (retentée après la fin du login Steam si besoin), puis rafraîchie
 # à chaque ouverture du panneau Quêtes (voir QuestsPanel) et après chaque
 # réclamation.
+# Niveau de compte (progression purement locale, voir SettingsManager.account_xp).
+func _update_account_level_display() -> void:
+	account_level_label.text = SettingsManager.t("ACCOUNT_LEVEL_LABEL") % SettingsManager.account_level()
+	account_level_bar.value = float(SettingsManager.account_xp_into_level()) / float(SettingsManager.ACCOUNT_XP_PER_LEVEL) * 100.0
+
 func _update_quests_badge(quests: Array) -> void:
 	var claimable := 0
 	for quest in quests:

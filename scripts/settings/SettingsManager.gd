@@ -14,6 +14,7 @@ signal ai_difficulty_changed(level: String)
 signal display_settings_changed
 signal keybind_changed(action: String, keycode: int)
 signal match_stats_changed(wins: int, losses: int)
+signal account_xp_changed(total_xp: int)
 signal reduced_motion_changed(enabled: bool)
 signal high_contrast_changed(enabled: bool)
 
@@ -86,6 +87,22 @@ var match_losses: int = 0
 # (succès Steam "Gardien", voir AchievementManager.ACH_GUARDIAN_STREAK) —
 # cassée par toute défaite ou toute victoire où le PV plancher est franchi.
 var high_hp_win_streak: int = 0
+# Niveau de compte — progression purement locale (même statut que match_wins
+# ci-dessus, aucune notion de niveau côté backend : monnaie/cartes/cosmétiques
+# restent entièrement autoritaires côté serveur). Palier fixe volontairement
+# simple, sans déblocage réel associé aujourd'hui — juste un repère de
+# progression visible en jeu (voir CLAUDE.md, doc UX "Progression du compte").
+var account_xp: int = 0
+const ACCOUNT_XP_PER_LEVEL := 1000
+const ACCOUNT_XP_WIN := 150
+const ACCOUNT_XP_LOSS := 50
+# Pseudos des derniers adversaires réseau affrontés (le plus récent en tête),
+# purement local — jamais leur SteamID64 (voir NetTransport.remote_display_name/
+# règle "aucun identifiant Steam ne fuit hors de SteamTransport"). "Ajouter en
+# ami" n'est donc proposé que juste après la partie (voir GameOverScreen),
+# jamais depuis cette liste rétrospective.
+var recent_opponents: Array[String] = []
+const RECENT_OPPONENTS_MAX := 10
 
 var resolution: Vector2i = DEFAULT_RESOLUTION
 var fullscreen: bool = false
@@ -161,6 +178,26 @@ func record_match_result(won: bool) -> void:
 		match_losses += 1
 	_save()
 	match_stats_changed.emit(match_wins, match_losses)
+
+func account_level() -> int:
+	return (account_xp / ACCOUNT_XP_PER_LEVEL) + 1
+
+func account_xp_into_level() -> int:
+	return account_xp % ACCOUNT_XP_PER_LEVEL
+
+func award_account_xp(amount: int) -> void:
+	if amount <= 0:
+		return
+	account_xp += amount
+	_save()
+	account_xp_changed.emit(account_xp)
+
+func record_recent_opponent(opponent_name: String) -> void:
+	recent_opponents.erase(opponent_name)
+	recent_opponents.push_front(opponent_name)
+	if recent_opponents.size() > RECENT_OPPONENTS_MAX:
+		recent_opponents.resize(RECENT_OPPONENTS_MAX)
+	_save()
 
 # Met à jour la série "sans passer sous 20 PV" (qualifies = ce match la
 # prolonge) et retourne la nouvelle valeur du compteur.
@@ -393,6 +430,8 @@ func _save() -> void:
 	cfg.set_value("display", "quality", quality)
 	cfg.set_value("stats", "match_wins", match_wins)
 	cfg.set_value("stats", "match_losses", match_losses)
+	cfg.set_value("stats", "account_xp", account_xp)
+	cfg.set_value("stats", "recent_opponents", recent_opponents)
 	cfg.set_value("stats", "high_hp_win_streak", high_hp_win_streak)
 	cfg.set_value("display", "text_scale", text_scale)
 	cfg.set_value("display", "colorblind_mode", colorblind_mode)
@@ -425,6 +464,13 @@ func _load() -> void:
 		quality = DEFAULT_QUALITY
 	match_wins = cfg.get_value("stats", "match_wins", 0) as int
 	match_losses = cfg.get_value("stats", "match_losses", 0) as int
+	account_xp = cfg.get_value("stats", "account_xp", 0) as int
+	var saved_recent = cfg.get_value("stats", "recent_opponents", [])
+	recent_opponents.clear()
+	if saved_recent is Array:
+		for name in saved_recent:
+			if name is String:
+				recent_opponents.append(name)
 	high_hp_win_streak = cfg.get_value("stats", "high_hp_win_streak", 0) as int
 	text_scale = cfg.get_value("display", "text_scale", DEFAULT_TEXT_SCALE) as float
 	text_scale = clampf(text_scale, TEXT_SCALE_MIN, TEXT_SCALE_MAX)

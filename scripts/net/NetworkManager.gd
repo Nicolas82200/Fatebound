@@ -70,6 +70,15 @@ func invite_friends() -> void:
 	if transport != null:
 		transport.invite_friends()
 
+# Voir NetTransport.open_add_friend_overlay.
+func open_add_friend_overlay() -> void:
+	if transport != null:
+		transport.open_add_friend_overlay()
+
+# Voir NetTransport.remote_display_name.
+func remote_display_name() -> String:
+	return transport.remote_display_name() if transport != null else ""
+
 # ─── Interne ──────────────────────────────────────────────────────────────────
 
 func _setup_transport(backend: TransportFactory.Backend) -> void:
