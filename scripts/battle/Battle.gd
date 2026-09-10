@@ -689,6 +689,7 @@ func _show_game_over(result: String) -> void:
 		return
 	if result == "victory" or result == "defeat":
 		SettingsManager.record_match_result(result == "victory")
+		SettingsManager.award_account_xp(SettingsManager.ACCOUNT_XP_WIN if result == "victory" else SettingsManager.ACCOUNT_XP_LOSS)
 	if result == "victory":
 		AchievementManager.on_victory(self)
 	elif result == "defeat":

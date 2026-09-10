@@ -86,6 +86,15 @@ var match_losses: int = 0
 # (succès Steam "Gardien", voir AchievementManager.ACH_GUARDIAN_STREAK) —
 # cassée par toute défaite ou toute victoire où le PV plancher est franchi.
 var high_hp_win_streak: int = 0
+# Niveau de compte — progression purement locale (même statut que match_wins
+# ci-dessus, aucune notion de niveau côté backend). Sert ici de condition de
+# déblocage pour les cosmétiques de dos de carte (voir CosmeticsManager).
+var account_xp: int = 0
+const ACCOUNT_XP_PER_LEVEL := 1000
+const ACCOUNT_XP_WIN := 150
+const ACCOUNT_XP_LOSS := 50
+# Index du dos de carte cosmétique choisi (voir CosmeticsManager.CARD_BACKS).
+var selected_card_back: int = 0
 
 var resolution: Vector2i = DEFAULT_RESOLUTION
 var fullscreen: bool = false
@@ -161,6 +170,24 @@ func record_match_result(won: bool) -> void:
 		match_losses += 1
 	_save()
 	match_stats_changed.emit(match_wins, match_losses)
+
+func account_level() -> int:
+	return (account_xp / ACCOUNT_XP_PER_LEVEL) + 1
+
+func account_xp_into_level() -> int:
+	return account_xp % ACCOUNT_XP_PER_LEVEL
+
+func award_account_xp(amount: int) -> void:
+	if amount <= 0:
+		return
+	account_xp += amount
+	_save()
+
+func set_selected_card_back(index: int) -> void:
+	if selected_card_back == index:
+		return
+	selected_card_back = index
+	_save()
 
 # Met à jour la série "sans passer sous 20 PV" (qualifies = ce match la
 # prolonge) et retourne la nouvelle valeur du compteur.
@@ -393,6 +420,8 @@ func _save() -> void:
 	cfg.set_value("display", "quality", quality)
 	cfg.set_value("stats", "match_wins", match_wins)
 	cfg.set_value("stats", "match_losses", match_losses)
+	cfg.set_value("stats", "account_xp", account_xp)
+	cfg.set_value("stats", "selected_card_back", selected_card_back)
 	cfg.set_value("stats", "high_hp_win_streak", high_hp_win_streak)
 	cfg.set_value("display", "text_scale", text_scale)
 	cfg.set_value("display", "colorblind_mode", colorblind_mode)
@@ -425,6 +454,8 @@ func _load() -> void:
 		quality = DEFAULT_QUALITY
 	match_wins = cfg.get_value("stats", "match_wins", 0) as int
 	match_losses = cfg.get_value("stats", "match_losses", 0) as int
+	account_xp = cfg.get_value("stats", "account_xp", 0) as int
+	selected_card_back = cfg.get_value("stats", "selected_card_back", 0) as int
 	high_hp_win_streak = cfg.get_value("stats", "high_hp_win_streak", 0) as int
 	text_scale = cfg.get_value("display", "text_scale", DEFAULT_TEXT_SCALE) as float
 	text_scale = clampf(text_scale, TEXT_SCALE_MIN, TEXT_SCALE_MAX)
