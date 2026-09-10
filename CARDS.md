@@ -254,7 +254,7 @@ Liste complète des cartes de la race **Humain**.
 | `DISCIPLINE` | Immunisé aux effets néfastes raciaux (Infection, Corruption, Terreur), au silence et au contrôle mental. Pas immunisé aux débuffs de stats ni au Gel. |
 | `FORMATION` | Tant qu'un serviteur que vous contrôlez est adjacent, ce serviteur gagne +1/+1. |
 | `CONTRE-ATTAQUE` | Si ce serviteur survit après avoir attaqué ou défendu, inflige à nouveau son ATK au serviteur qui lui a infligé des dégâts. |
-| `COMMANDEMENT` | Les Humains invoqué que vous contrôlezs après lui gagnent +1/+0 de façon permanente. |
+| `COMMANDEMENT` | Les serviteurs Humains alliés invoqués après lui gagnent +1/+0 de façon permanente. |
 | `FORTIFICATION` | Ne peut pas être déplacé, renvoyé en main ou transformé par des effets ennemis. |
 
 ---
