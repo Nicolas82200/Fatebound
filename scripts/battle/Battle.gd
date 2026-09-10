@@ -120,6 +120,9 @@ var combat_log_panel: CombatLogPanel
 # Glossaire des mots-clés/déclencheurs consultable via le bouton "?", créé en
 # code pour ne pas toucher Battle.tscn (voir KeywordGlossaryPanel).
 var glossary_panel: KeywordGlossaryPanel
+# Menu d'emotes cosmétiques (voir EmoteWheel), créé en code — pas de nœud
+# dans Battle.tscn, même convention que glossary_panel ci-dessus.
+var emote_wheel: EmoteWheel
 # Décompte du temps de tour du joueur local, créé en code (voir TurnTimer).
 var turn_timer: TurnTimer
 # Voile de pause affiché lors d'une coupure réseau transitoire, créé en code
@@ -301,6 +304,10 @@ func _init_systems() -> void:
 	glossary_panel = KeywordGlossaryPanel.new()
 	add_child(glossary_panel)
 	help_button.pressed.connect(glossary_panel.toggle)
+	emote_wheel = EmoteWheel.new()
+	emote_wheel.position = Vector2(16, 70)
+	emote_wheel.emote_picked.connect(_on_emote_picked)
+	add_child(emote_wheel)
 	reconnect_overlay = ReconnectOverlay.new()
 	add_child(reconnect_overlay)
 	turn_timer = TurnTimer.new()
@@ -682,6 +689,52 @@ func check_game_end() -> void:
 
 # Laisse les dernières animations (mort, dégâts) se terminer avant d'afficher
 # l'écran de fin par-dessus le plateau. Rejouer n'est proposé qu'en solo.
+# ─── Emotes ───────────────────────────────────────────────────────────────────
+# Purement cosmétique (voir EmoteWheel/NetCommand.EMOTE) : jamais de texte
+# libre, jamais d'impact sur l'état de partie.
+
+func _on_emote_picked(emote_id: int) -> void:
+	_show_emote_bubble(EmoteWheel.text_for(emote_id), true)
+	if net_emitter != null:
+		net_emitter.emote(emote_id)
+
+# Appelé par NetworkOpponent à la réception d'un NetCommand.EMOTE du pair.
+func show_enemy_emote(emote_id: int) -> void:
+	_show_emote_bubble(EmoteWheel.text_for(emote_id), false)
+
+const EMOTE_BUBBLE_HOLD_TIME := 2.0
+const EMOTE_BUBBLE_FADE_TIME := 0.3
+
+func _show_emote_bubble(text: String, is_player: bool) -> void:
+	if text == "":
+		return
+	var panel_name := "PlayerHeroPanel" if is_player else "EnemyHeroPanel"
+	var hero_panel: Control = get_node_or_null(panel_name)
+	if hero_panel == null:
+		return
+	var bubble := Label.new()
+	bubble.text = text
+	bubble.add_theme_font_size_override("font_size", 22)
+	bubble.add_theme_color_override("font_color", Color("e8d5a3"))
+	bubble.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
+	bubble.add_theme_constant_override("shadow_offset_x", 2)
+	bubble.add_theme_constant_override("shadow_offset_y", 2)
+	bubble.z_index = 120
+	bubble.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(bubble)
+	await get_tree().process_frame
+	var hero_rect: Rect2 = hero_panel.get_global_rect()
+	bubble.global_position = Vector2(
+		hero_rect.position.x + hero_rect.size.x / 2.0 - bubble.size.x / 2.0,
+		hero_rect.position.y - bubble.size.y - 12.0,
+	)
+	bubble.modulate.a = 0.0
+	var tween: Tween = create_tween()
+	tween.tween_property(bubble, "modulate:a", 1.0, EMOTE_BUBBLE_FADE_TIME)
+	tween.tween_interval(EMOTE_BUBBLE_HOLD_TIME)
+	tween.tween_property(bubble, "modulate:a", 0.0, EMOTE_BUBBLE_FADE_TIME)
+	tween.tween_callback(bubble.queue_free)
+
 func _show_game_over(result: String) -> void:
 	await get_tree().create_timer(1.0).timeout
 	if tutorial_active and result == "victory":
