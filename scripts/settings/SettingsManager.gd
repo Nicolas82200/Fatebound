@@ -82,6 +82,13 @@ var referral_prompt_seen: bool = false
 # réseau, tutoriel exclu (voir Battle._show_game_over).
 var match_wins: int = 0
 var match_losses: int = 0
+# Détail des dernières parties (voir record_match_history_entry, appelé par
+# Battle._show_game_over), le plus récent en tête. Purement local comme
+# match_wins/match_losses ci-dessus — aucune notion d'historique côté
+# backend. Chaque entrée : {result, opponent_name, opponent_race,
+# duration_sec, timestamp}.
+var match_history: Array = []
+const MATCH_HISTORY_MAX_ENTRIES := 20
 # Série de victoires consécutives sans jamais passer sous 20 PV de héros
 # (succès Steam "Gardien", voir AchievementManager.ACH_GUARDIAN_STREAK) —
 # cassée par toute défaite ou toute victoire où le PV plancher est franchi.
@@ -161,6 +168,12 @@ func record_match_result(won: bool) -> void:
 		match_losses += 1
 	_save()
 	match_stats_changed.emit(match_wins, match_losses)
+
+func record_match_history_entry(entry: Dictionary) -> void:
+	match_history.push_front(entry)
+	if match_history.size() > MATCH_HISTORY_MAX_ENTRIES:
+		match_history.resize(MATCH_HISTORY_MAX_ENTRIES)
+	_save()
 
 # Met à jour la série "sans passer sous 20 PV" (qualifies = ce match la
 # prolonge) et retourne la nouvelle valeur du compteur.
@@ -393,6 +406,7 @@ func _save() -> void:
 	cfg.set_value("display", "quality", quality)
 	cfg.set_value("stats", "match_wins", match_wins)
 	cfg.set_value("stats", "match_losses", match_losses)
+	cfg.set_value("stats", "match_history", match_history)
 	cfg.set_value("stats", "high_hp_win_streak", high_hp_win_streak)
 	cfg.set_value("display", "text_scale", text_scale)
 	cfg.set_value("display", "colorblind_mode", colorblind_mode)
@@ -425,6 +439,8 @@ func _load() -> void:
 		quality = DEFAULT_QUALITY
 	match_wins = cfg.get_value("stats", "match_wins", 0) as int
 	match_losses = cfg.get_value("stats", "match_losses", 0) as int
+	var saved_history = cfg.get_value("stats", "match_history", [])
+	match_history = saved_history if saved_history is Array else []
 	high_hp_win_streak = cfg.get_value("stats", "high_hp_win_streak", 0) as int
 	text_scale = cfg.get_value("display", "text_scale", DEFAULT_TEXT_SCALE) as float
 	text_scale = clampf(text_scale, TEXT_SCALE_MIN, TEXT_SCALE_MAX)

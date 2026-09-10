@@ -168,6 +168,9 @@ var player_used_back_row_this_match: bool = false
 var player_commandement_triggers_this_match: int = 0
 var player_black_blood_triggers_this_match: int = 0
 var deck_has_legendary: bool = false
+# Horodatage de début de match, pour la durée affichée dans l'historique local
+# de parties (voir SettingsManager.record_match_history_entry/_record_match_history).
+var match_start_msec: int = 0
 # Ce match provient-il de la file d'appariement classé (bouton "Partie
 # classée" de NetLobby) plutôt que d'une "Partie rapide" ? Le backend ne fait
 # lui-même aucune distinction entre les deux (voir CLAUDE.md § Ranked) : ce
@@ -224,6 +227,7 @@ func _ready() -> void:
 
 func _init_data() -> void:
 	tutorial_active = TutorialContext.active
+	match_start_msec = Time.get_ticks_msec()
 	player_hero = Hero.new(30)
 	player_min_hp_this_match = player_hero.health
 	# HP réduits en tutoriel : l'adversaire scripté ne joue que 2 serviteurs et
@@ -680,6 +684,27 @@ func check_game_end() -> void:
 		turn_timer.stop()
 		_show_game_over("defeat" if player_hero.is_dead() else "victory")
 
+# Enregistre cette partie dans l'historique local (voir SettingsManager.
+# match_history) — nom/race de l'adversaire réel en réseau, "IA" en solo
+# (AISystem n'expose pas de "nom" à proprement parler).
+func _record_match_history(result: String) -> void:
+	var opponent_name: String
+	var opponent_race: String
+	if network_manager != null:
+		var remote_name := network_manager.remote_display_name()
+		opponent_name = remote_name if remote_name != "" else SettingsManager.t("NET_VS_OPPONENT")
+		opponent_race = Race.deck_race_label(NetContext.setup.get("opponent_deck", []))
+	else:
+		opponent_name = SettingsManager.t("MATCH_HISTORY_AI_OPPONENT")
+		opponent_race = ""
+	SettingsManager.record_match_history_entry({
+		"result": result,
+		"opponent_name": opponent_name,
+		"opponent_race": opponent_race,
+		"duration_sec": (Time.get_ticks_msec() - match_start_msec) / 1000,
+		"timestamp": Time.get_unix_time_from_system(),
+	})
+
 # Laisse les dernières animations (mort, dégâts) se terminer avant d'afficher
 # l'écran de fin par-dessus le plateau. Rejouer n'est proposé qu'en solo.
 func _show_game_over(result: String) -> void:
@@ -689,6 +714,7 @@ func _show_game_over(result: String) -> void:
 		return
 	if result == "victory" or result == "defeat":
 		SettingsManager.record_match_result(result == "victory")
+		_record_match_history(result)
 	if result == "victory":
 		AchievementManager.on_victory(self)
 	elif result == "defeat":

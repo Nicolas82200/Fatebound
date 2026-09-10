@@ -526,30 +526,8 @@ func _show_vs_screen() -> void:
 	var remote_name := _net.remote_display_name()
 	vs_remote_name_label.text = remote_name if remote_name != "" else SettingsManager.t("NET_VS_OPPONENT")
 	var local_deck: Array = DeckManager.get_active_deck().card_paths if DeckManager.get_active_deck() else []
-	vs_local_race_label.text = _deck_race_label(local_deck)
-	vs_remote_race_label.text = _deck_race_label(NetContext.setup.get("opponent_deck", []))
+	vs_local_race_label.text = Race.deck_race_label(local_deck)
+	vs_remote_race_label.text = Race.deck_race_label(NetContext.setup.get("opponent_deck", []))
 	vs_overlay.show()
 	await get_tree().create_timer(VS_SCREEN_DURATION).timeout
 	vs_overlay.hide()
-
-# Race(s) distinctes présentes dans un deck (liste de resource_path), jointes
-# pour affichage — même logique que DeckSystem._compute_deck_races, réutilisée
-# ici à plat sur des chemins bruts (le deck adverse n'est jamais chargé en
-# DeckData complet, voir NetHandshake).
-func _deck_race_label(card_paths: Array) -> String:
-	var race_names: Array[String] = []
-	for path in card_paths:
-		if not (path is String):
-			continue
-		var card := load(path) as CardData
-		if card == null or card.race == Race.Type.NONE:
-			continue
-		# Race.get_race_name() renvoie un identifiant technique anglais ("Undead"),
-		# jamais affiché tel quel (voir Battle.deck_races) — traduit via les clés
-		# RACE_<NOM> déjà utilisées par le filtre de race du deckbuilder.
-		var race_name := SettingsManager.t("RACE_" + Race.get_race_name(card.race).to_upper())
-		if race_name not in race_names:
-			race_names.append(race_name)
-	if race_names.is_empty():
-		return SettingsManager.t("NET_VS_UNKNOWN_DECK")
-	return " / ".join(race_names)
