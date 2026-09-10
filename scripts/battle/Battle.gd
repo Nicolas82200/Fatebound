@@ -125,6 +125,10 @@ var turn_timer: TurnTimer
 # Voile de pause affiché lors d'une coupure réseau transitoire, créé en code
 # (voir ReconnectOverlay). Reste inutilisé/masqué en solo.
 var reconnect_overlay: ReconnectOverlay
+# Popup Oui/Non générique (voir ConfirmActionPopup), utilisée par SelectionSystem/
+# SacrificeSystem quand SettingsManager.confirm_before_attack/confirm_before_sacrifice
+# est actif. Créée en code (voir _init_systems), jamais nulle une fois la partie lancée.
+var confirm_popup: ConfirmActionPopup
 
 var effect_manager := EffectManager.new()
 # Tutoriel obligatoire du nouveau joueur (voir TutorialContext/TutorialManager) :
@@ -303,6 +307,8 @@ func _init_systems() -> void:
 	help_button.pressed.connect(glossary_panel.toggle)
 	reconnect_overlay = ReconnectOverlay.new()
 	add_child(reconnect_overlay)
+	confirm_popup = ConfirmActionPopup.new()
+	add_child(confirm_popup)
 	turn_timer = TurnTimer.new()
 	turn_timer.timeout.connect(_on_turn_timer_timeout)
 	# Enfant du bouton lui-même (comme le halo "ready hint" de EndTurnButton) :

@@ -95,6 +95,12 @@ var text_scale: float = DEFAULT_TEXT_SCALE
 var colorblind_mode: String = DEFAULT_COLORBLIND_MODE
 var high_contrast: bool = DEFAULT_HIGH_CONTRAST
 var reduced_motion: bool = DEFAULT_REDUCED_MOTION
+# Réglages Gameplay (voir GameplaySettingsMenu) : demandent une confirmation
+# avant d'exécuter une attaque/un sacrifice (single-attaquant uniquement, voir
+# SelectionSystem/SacrificeSystem — la multi-attaque via Ctrl+clic reste sans
+# confirmation, déjà un choix groupé délibéré du joueur).
+var confirm_before_attack: bool = false
+var confirm_before_sacrifice: bool = false
 var _colorblind_overlay: ColorRect
 var _high_contrast_overlay: ColorRect
 
@@ -305,6 +311,18 @@ func set_reduced_motion(enabled: bool) -> void:
 	reduced_motion_changed.emit(enabled)
 	display_settings_changed.emit()
 
+func set_confirm_before_attack(enabled: bool) -> void:
+	if confirm_before_attack == enabled:
+		return
+	confirm_before_attack = enabled
+	_save()
+
+func set_confirm_before_sacrifice(enabled: bool) -> void:
+	if confirm_before_sacrifice == enabled:
+		return
+	confirm_before_sacrifice = enabled
+	_save()
+
 # Facteur multiplicatif à appliquer à la durée des tweens de déplacement
 # (voir AnimationSystem._t, Hand.gd, CardPopupSystem.gd).
 func motion_scale() -> float:
@@ -398,6 +416,8 @@ func _save() -> void:
 	cfg.set_value("display", "colorblind_mode", colorblind_mode)
 	cfg.set_value("display", "high_contrast", high_contrast)
 	cfg.set_value("display", "reduced_motion", reduced_motion)
+	cfg.set_value("gameplay", "confirm_before_attack", confirm_before_attack)
+	cfg.set_value("gameplay", "confirm_before_sacrifice", confirm_before_sacrifice)
 	cfg.set_value("input", "keybinds", keybinds)
 	cfg.save(CONFIG_PATH)
 
@@ -433,6 +453,8 @@ func _load() -> void:
 		colorblind_mode = DEFAULT_COLORBLIND_MODE
 	high_contrast = cfg.get_value("display", "high_contrast", DEFAULT_HIGH_CONTRAST) as bool
 	reduced_motion = cfg.get_value("display", "reduced_motion", DEFAULT_REDUCED_MOTION) as bool
+	confirm_before_attack = cfg.get_value("gameplay", "confirm_before_attack", false) as bool
+	confirm_before_sacrifice = cfg.get_value("gameplay", "confirm_before_sacrifice", false) as bool
 	var saved_keybinds = cfg.get_value("input", "keybinds", {})
 	if saved_keybinds is Dictionary:
 		for action in saved_keybinds:

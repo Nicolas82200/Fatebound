@@ -68,6 +68,9 @@ func on_enemy_minion_clicked(target: Minion, _board_minion: BoardMinion) -> void
 
 	if selected_attacker == null or not battle._can_attack_minion_target(selected_attacker, target):
 		return
+	if SettingsManager.confirm_before_attack \
+			and not await battle.confirm_popup.confirm(SettingsManager.t("battle.confirm.attack")):
+		return
 	await battle.combat_system.resolve_combat(selected_attacker, target)
 	clear_selection()
 	if battle.tutorial_manager:
@@ -82,6 +85,9 @@ func on_enemy_hero_clicked() -> void:
 		return
 
 	if selected_attacker == null or not battle._can_attack_hero(selected_attacker):
+		return
+	if SettingsManager.confirm_before_attack \
+			and not await battle.confirm_popup.confirm(SettingsManager.t("battle.confirm.attack")):
 		return
 	await battle.combat_system.perform_hero_attack(selected_attacker)
 	clear_selection()
