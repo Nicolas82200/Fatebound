@@ -61,3 +61,9 @@ func close() -> void:
 # seul SteamTransport l'implémente, via l'overlay Steam).
 func invite_friends() -> void:
 	pass
+
+# Nom d'affichage du pair distant (ex. pseudo Steam), si le backend peut le
+# fournir. Chaîne vide si non applicable ou pas encore connu (voir écran de
+# présentation VS, NetLobby._show_vs_screen).
+func remote_display_name() -> String:
+	return ""

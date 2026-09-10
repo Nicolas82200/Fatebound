@@ -49,6 +49,15 @@ const MAIN_MENU_SCENE := "res://scenes/mainMenu/MainMenu.tscn"
 @onready var overlay_phase_label: Label       = $MatchFoundOverlay/OverlayCenter/OverlayVBox/OverlayPhaseLabel
 @onready var overlay_tip_label:   Label       = $MatchFoundOverlay/OverlayCenter/OverlayVBox/OverlayTipLabel
 
+# Présentation face-à-face affichée juste avant le lancement de Battle.tscn
+# (voir _on_battle_sync_ready/_show_vs_screen) : nom + race(s) de chaque camp.
+@onready var vs_overlay:            Control = $VsOverlay
+@onready var vs_local_name_label:   Label   = %LocalNameLabel
+@onready var vs_local_race_label:   Label   = %LocalRaceLabel
+@onready var vs_remote_name_label:  Label   = %RemoteNameLabel
+@onready var vs_remote_race_label:  Label   = %RemoteRaceLabel
+const VS_SCREEN_DURATION := 2.2
+
 const SPINNER_TURNS_PER_SECOND := 0.5
 
 # Astuces affichées en boucle sur l'écran de chargement une fois l'adversaire
@@ -500,8 +509,47 @@ func _on_handshake_ready(setup: Dictionary) -> void:
 
 func _on_battle_sync_ready() -> void:
 	print("[NetLobby] Adversaire prêt — lancement de la bataille réseau…")
+	await _show_vs_screen()
 	# Le NetworkManager doit survivre au changement de scène : on le reparente
 	# sous la racine de l'arbre avant de charger Battle.
 	_net.get_parent().remove_child(_net)
 	get_tree().root.add_child(_net)
 	SceneTransition.change_scene(BATTLE_SCENE)
+
+# Présentation face-à-face brève avant la bataille (voir CLAUDE.md, doc UX
+# "Présentation avant la partie") : remplace l'écran de chargement, affiche
+# nom + race(s) de chaque camp pendant VS_SCREEN_DURATION secondes.
+func _show_vs_screen() -> void:
+	match_found_overlay.hide()
+	var local_name := SteamService.local_persona_name()
+	vs_local_name_label.text = local_name if local_name != "" else SettingsManager.t("NET_VS_YOU")
+	var remote_name := _net.remote_display_name()
+	vs_remote_name_label.text = remote_name if remote_name != "" else SettingsManager.t("NET_VS_OPPONENT")
+	var local_deck: Array = DeckManager.get_active_deck().card_paths if DeckManager.get_active_deck() else []
+	vs_local_race_label.text = _deck_race_label(local_deck)
+	vs_remote_race_label.text = _deck_race_label(NetContext.setup.get("opponent_deck", []))
+	vs_overlay.show()
+	await get_tree().create_timer(VS_SCREEN_DURATION).timeout
+	vs_overlay.hide()
+
+# Race(s) distinctes présentes dans un deck (liste de resource_path), jointes
+# pour affichage — même logique que DeckSystem._compute_deck_races, réutilisée
+# ici à plat sur des chemins bruts (le deck adverse n'est jamais chargé en
+# DeckData complet, voir NetHandshake).
+func _deck_race_label(card_paths: Array) -> String:
+	var race_names: Array[String] = []
+	for path in card_paths:
+		if not (path is String):
+			continue
+		var card := load(path) as CardData
+		if card == null or card.race == Race.Type.NONE:
+			continue
+		# Race.get_race_name() renvoie un identifiant technique anglais ("Undead"),
+		# jamais affiché tel quel (voir Battle.deck_races) — traduit via les clés
+		# RACE_<NOM> déjà utilisées par le filtre de race du deckbuilder.
+		var race_name := SettingsManager.t("RACE_" + Race.get_race_name(card.race).to_upper())
+		if race_name not in race_names:
+			race_names.append(race_name)
+	if race_names.is_empty():
+		return SettingsManager.t("NET_VS_UNKNOWN_DECK")
+	return " / ".join(race_names)
