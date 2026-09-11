@@ -456,6 +456,8 @@ battle.gameover.disconnect_sub,"Ton adversaire a quitté la partie.","Your oppon
 battle.gameover.replay,"Rejouer","Play again"
 battle.gameover.menu,"Menu principal","Main menu"
 battle.gameover.reward,"+%d monnaie gagnée","+%d currency earned"
+battle.gameover.stats.duration,"Durée de la partie","Match duration"
+battle.gameover.quests_title,"Quêtes du jour","Today's quests"
 SUPPORTER_PACK_TITLE,"Wyrdane Supporter Pack","Wyrdane Supporter Pack"
 SUPPORTER_PACK_DESC,"Soutenez le développement de Wyrdane. Inclus : Card Back exclusif, Badge Discord, Titre \"Founder\" — aucun avantage compétitif.","Support Wyrdane's development. Includes: exclusive Card Back, Discord badge, \"Founder\" title — no competitive advantage."
 SUPPORTER_PACK_BUTTON,"Rejoindre (bientôt disponible)","Join (coming soon)"
