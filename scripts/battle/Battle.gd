@@ -176,7 +176,8 @@ var player_commandement_triggers_this_match: int = 0
 var player_black_blood_triggers_this_match: int = 0
 var deck_has_legendary: bool = false
 # Horodatage de début de match, pour la durée affichée dans l'historique local
-# de parties (voir SettingsManager.record_match_history_entry/_record_match_history).
+# de parties (voir SettingsManager.record_match_history_entry/_record_match_history)
+# et sur l'écran de fin (voir GameOverScreen.show_stats).
 var match_start_msec: int = 0
 # Ce match provient-il de la file d'appariement classé (bouton "Partie
 # classée" de NetLobby) plutôt que d'une "Partie rapide" ? Le backend ne fait
@@ -803,11 +804,17 @@ func _show_game_over(result: String) -> void:
 	if result == "victory" or result == "defeat":
 		SettingsManager.record_match_result(result == "victory")
 		_record_match_history(result)
+		SettingsManager.award_account_xp(SettingsManager.ACCOUNT_XP_WIN if result == "victory" else SettingsManager.ACCOUNT_XP_LOSS)
 	if result == "victory":
 		AchievementManager.on_victory(self)
 	elif result == "defeat":
 		AchievementManager.on_defeat()
 	game_over_screen.show_result(result, network_manager == null)
+	if result == "victory" or result == "defeat":
+		game_over_screen.show_stats({
+			"duration_sec": (Time.get_ticks_msec() - match_start_msec) / 1000,
+		})
+		game_over_screen.show_quests()
 	MatchResultReporter.report(result, network_manager, net_client_match_id, net_opponent_backend_id, game_over_screen,
 			cards_played_by_race, deck_races)
 
