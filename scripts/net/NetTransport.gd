@@ -69,7 +69,7 @@ func open_add_friend_overlay() -> void:
 	pass
 
 # Nom d'affichage du pair distant (ex. pseudo Steam), si le backend peut le
-# fournir. Chaîne vide si non applicable ou pas encore connu (voir écran VS/
-# historique de parties/liste "joueurs récents").
+# fournir. Chaîne vide si non applicable ou pas encore connu (voir écran de
+# présentation VS/historique de parties/liste "joueurs récents").
 func remote_display_name() -> String:
 	return ""

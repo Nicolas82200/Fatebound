@@ -21,6 +21,7 @@ static func open(menu) -> void:
 	_fetch(menu)
 	ReferralPanel.open(menu)
 	RecentOpponentsPanel.open(menu)
+	MatchHistoryPanel.open(menu)
 	ProfileCosmeticsPanel.open(menu)
 	CosmeticsPanel.open(menu)
 	SupporterPackPanel.open(menu)
