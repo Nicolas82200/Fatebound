@@ -20,6 +20,7 @@ static func open(menu) -> void:
 	_fetch(menu)
 	ReferralPanel.open(menu)
 	CosmeticsPanel.open(menu)
+	SupporterPackPanel.open(menu)
 
 # BackendClient.login_with_steam() est lancé de façon asynchrone au démarrage
 # du menu (voir MainMenu._start_backend_sync) : si le joueur ouvre cette vue
