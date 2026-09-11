@@ -175,6 +175,9 @@ var player_used_back_row_this_match: bool = false
 var player_commandement_triggers_this_match: int = 0
 var player_black_blood_triggers_this_match: int = 0
 var deck_has_legendary: bool = false
+# Horodatage de début de match (voir GameOverScreen.show_stats), pour afficher
+# la durée de la partie sur l'écran de fin.
+var match_start_msec: int = 0
 # Ce match provient-il de la file d'appariement classé (bouton "Partie
 # classée" de NetLobby) plutôt que d'une "Partie rapide" ? Le backend ne fait
 # lui-même aucune distinction entre les deux (voir CLAUDE.md § Ranked) : ce
@@ -231,6 +234,7 @@ func _ready() -> void:
 
 func _init_data() -> void:
 	tutorial_active = TutorialContext.active
+	match_start_msec = Time.get_ticks_msec()
 	player_hero = Hero.new(30)
 	player_min_hp_this_match = player_hero.health
 	# HP réduits en tutoriel : l'adversaire scripté ne joue que 2 serviteurs et
@@ -783,6 +787,11 @@ func _show_game_over(result: String) -> void:
 	elif result == "defeat":
 		AchievementManager.on_defeat()
 	game_over_screen.show_result(result, network_manager == null)
+	if result == "victory" or result == "defeat":
+		game_over_screen.show_stats({
+			"duration_sec": (Time.get_ticks_msec() - match_start_msec) / 1000,
+		})
+		game_over_screen.show_quests()
 	MatchResultReporter.report(result, network_manager, net_client_match_id, net_opponent_backend_id, game_over_screen,
 			cards_played_by_race, deck_races)
 
