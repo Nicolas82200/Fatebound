@@ -2,7 +2,6 @@
 extends Control
 
 const BATTLE_SCENE := "res://scenes/battle/Battle.tscn"
-const NET_LOBBY_SCENE := "res://scenes/net/NetLobby.tscn"
 const ARENA_SCENE := "res://scenes/arena/ArenaBattle.tscn"
 const NEWS_DIR := "res://resources/news/"
 const NEWS_FEED_URL := "https://wyrdane.com/feed.json"
@@ -117,10 +116,8 @@ const CUSTOM_DIFFICULTY_LABEL_KEYS := {
 @onready var profile_view:    VBoxContainer = $InfoPanel/InfoMargin/ViewsRoot/ProfileView
 @onready var profile_body:    VBoxContainer = $InfoPanel/InfoMargin/ViewsRoot/ProfileView/ProfileScroll/ProfileBodyVBox
 @onready var profile_title_label: Label = $InfoPanel/InfoMargin/ViewsRoot/ProfileView/ProfileTitleLabel
-@onready var profile_avatar_frame: PanelContainer = %ProfileAvatarFrame
 @onready var profile_avatar:  TextureRect = $InfoPanel/InfoMargin/ViewsRoot/ProfileView/ProfileScroll/ProfileBodyVBox/ProfileHeaderRow/ProfileAvatarFrame/ProfileAvatar
 @onready var profile_name_label: Label = $InfoPanel/InfoMargin/ViewsRoot/ProfileView/ProfileScroll/ProfileBodyVBox/ProfileHeaderRow/ProfileNameCol/ProfileNameLabel
-@onready var profile_player_title_label: Label = %ProfileTitleLabel
 @onready var profile_match_stats_label: Label = $InfoPanel/InfoMargin/ViewsRoot/ProfileView/ProfileScroll/ProfileBodyVBox/ProfileMatchStatsLabel
 @onready var profile_member_since_label: Label = $InfoPanel/InfoMargin/ViewsRoot/ProfileView/ProfileScroll/ProfileBodyVBox/ProfileMemberSinceLabel
 @onready var profile_collection_label: Label = $InfoPanel/InfoMargin/ViewsRoot/ProfileView/ProfileScroll/ProfileBodyVBox/ProfileCollectionLabel
@@ -788,8 +785,13 @@ func _on_launch_pressed() -> void:
 			CustomMatchContext.ai_difficulty_override = SettingsManager.AI_DIFFICULTIES[chosen_index]
 		SceneTransition.change_scene(BATTLE_SCENE)
 	else:
+		# Contrairement au solo, ne quitte pas MainMenu : le choix du mode
+		# (Normal/Classé/Ami) s'affiche en popup par-dessus, puis le bandeau de
+		# recherche (MatchmakingOverlay, autoload persistant) prend le relais
+		# pendant que le joueur continue de naviguer où il veut (deck builder,
+		# boutique...) jusqu'à ce qu'un adversaire soit trouvé.
 		AudioManager.play(AudioManager.OPEN_MENU)
-		SceneTransition.change_scene(NET_LOBBY_SCENE)
+		MatchmakingOverlay.open_mode_picker()
 
 func _on_discord_pressed() -> void:
 	OS.shell_open(DISCORD_URL)
