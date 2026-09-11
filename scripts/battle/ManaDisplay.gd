@@ -153,14 +153,14 @@ func _make_race_cell(race: int) -> PanelContainer:
 	if RACE_MANA_ICONS.has(race):
 		var icon := TextureRect.new()
 		icon.texture = RACE_MANA_ICONS[race]
-		icon.custom_minimum_size = Vector2(16, 16)
+		icon.custom_minimum_size = Vector2(22, 22)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.modulate = color
 		swatch = icon
 	else:
 		var rect := ColorRect.new()
-		rect.custom_minimum_size = Vector2(12, 12)
+		rect.custom_minimum_size = Vector2(13, 13)
 		rect.color = color
 		swatch = rect
 	hbox.add_child(swatch)

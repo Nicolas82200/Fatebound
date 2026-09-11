@@ -2,7 +2,6 @@
 extends Control
 
 const BATTLE_SCENE := "res://scenes/battle/Battle.tscn"
-const NET_LOBBY_SCENE := "res://scenes/net/NetLobby.tscn"
 const ARENA_SCENE := "res://scenes/arena/ArenaBattle.tscn"
 const NEWS_DIR := "res://resources/news/"
 const NEWS_FEED_URL := "https://wyrdane.com/feed.json"
@@ -13,7 +12,8 @@ const WEBSITE_DEVLOG_PATH := "/dev-log"
 const DECK_BUILDER_SCENE := "res://scenes/deck/DeckBuilder.tscn"
 
 enum PlayMode { SOLO, MULTI }
-enum InfoView { NEWS, DECK_COMPOSITION, PROFILE, CREDITS, SETTINGS, DECKS_MANAGE, SHOP, REPORT, QUESTS, MODE_SELECT, DECK_SELECT }
+enum ShopTab { PACKS, CARD_BACKS }
+enum InfoView { NEWS, DECK_COMPOSITION, PROFILE, CREDITS, SETTINGS, DECKS_MANAGE, SHOP, PACK_SHOP, REPORT, QUESTS, MODE_SELECT, DECK_SELECT }
 
 # Couleur d'accent affichée en bandeau à gauche de chaque ligne de deck, selon
 # la race dominante du deck — même repère visuel que DeckList._dominant_race_color.
@@ -86,11 +86,20 @@ const CUSTOM_DIFFICULTY_LABEL_KEYS := {
 @onready var offline_banner_close: Button = $OfflineBanner/OfflineBannerMargin/OfflineBannerRow/OfflineBannerCloseButton
 
 @onready var decks_button:    Button = $BottomCenterPanel/BottomCenterMargin/BottomCenterRow/DecksButton
-@onready var packs_button:    Button = $NavPanel/NavMargin/NavStack/MainNavView/PacksButton
+@onready var shop_button:    Button = $NavPanel/NavMargin/NavStack/MainNavView/PacksButton
 @onready var quests_button:   Button = $BottomCenterPanel/BottomCenterMargin/BottomCenterRow/QuestsButton
 @onready var quests_badge:    Control = $BottomCenterPanel/BottomCenterMargin/BottomCenterRow/QuestsButton/QuestsBadge
 @onready var quests_badge_label: Label = $BottomCenterPanel/BottomCenterMargin/BottomCenterRow/QuestsButton/QuestsBadge/QuestsBadgeLabel
 @onready var pack_shop:       Control = $InfoPanel/InfoMargin/ViewsRoot/PackShop
+
+@onready var shop_view:            VBoxContainer = $InfoPanel/InfoMargin/ViewsRoot/ShopView
+@onready var open_pack_shop_button: Button = $InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopScroll/ShopBody/PacksSection/OpenPackShopButton
+@onready var shop_title_label: Label = $InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopTitleLabel
+@onready var shop_packs_tab_button: Button = $InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopTabsRow/ShopPacksTabButton
+@onready var shop_card_backs_tab_button: Button = $InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopTabsRow/ShopCardBacksTabButton
+@onready var shop_packs_section: VBoxContainer = $InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopScroll/ShopBody/PacksSection
+@onready var shop_card_backs_section: VBoxContainer = $InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopScroll/ShopBody/CardBacksSection
+@onready var shop_card_backs_hint_label: Label = $InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopScroll/ShopBody/CardBacksSection/CardBacksHintLabel
 
 @onready var news_view:       VBoxContainer = $InfoPanel/InfoMargin/ViewsRoot/NewsView
 @onready var news_title_label: Label = $InfoPanel/InfoMargin/ViewsRoot/NewsView/NewsTitleLabel
@@ -107,10 +116,8 @@ const CUSTOM_DIFFICULTY_LABEL_KEYS := {
 @onready var profile_view:    VBoxContainer = $InfoPanel/InfoMargin/ViewsRoot/ProfileView
 @onready var profile_body:    VBoxContainer = $InfoPanel/InfoMargin/ViewsRoot/ProfileView/ProfileScroll/ProfileBodyVBox
 @onready var profile_title_label: Label = $InfoPanel/InfoMargin/ViewsRoot/ProfileView/ProfileTitleLabel
-@onready var profile_avatar_frame: PanelContainer = %ProfileAvatarFrame
 @onready var profile_avatar:  TextureRect = $InfoPanel/InfoMargin/ViewsRoot/ProfileView/ProfileScroll/ProfileBodyVBox/ProfileHeaderRow/ProfileAvatarFrame/ProfileAvatar
 @onready var profile_name_label: Label = $InfoPanel/InfoMargin/ViewsRoot/ProfileView/ProfileScroll/ProfileBodyVBox/ProfileHeaderRow/ProfileNameCol/ProfileNameLabel
-@onready var profile_player_title_label: Label = %ProfileTitleLabel
 @onready var profile_match_stats_label: Label = $InfoPanel/InfoMargin/ViewsRoot/ProfileView/ProfileScroll/ProfileBodyVBox/ProfileMatchStatsLabel
 @onready var profile_member_since_label: Label = $InfoPanel/InfoMargin/ViewsRoot/ProfileView/ProfileScroll/ProfileBodyVBox/ProfileMemberSinceLabel
 @onready var profile_collection_label: Label = $InfoPanel/InfoMargin/ViewsRoot/ProfileView/ProfileScroll/ProfileBodyVBox/ProfileCollectionLabel
@@ -170,7 +177,11 @@ func _ready() -> void:
 	report_submit_button.pressed.connect(_on_report_submit_pressed)
 	quit_button.pressed.connect(_on_quit)
 	decks_button.pressed.connect(_on_decks_button_pressed)
-	packs_button.pressed.connect(_on_packs_button_pressed)
+	shop_button.pressed.connect(_on_shop_button_pressed)
+	open_pack_shop_button.pressed.connect(func(): _show_info_view(InfoView.PACK_SHOP))
+	shop_packs_tab_button.pressed.connect(func(): _select_shop_tab(ShopTab.PACKS))
+	shop_card_backs_tab_button.pressed.connect(func(): _select_shop_tab(ShopTab.CARD_BACKS))
+	_select_shop_tab(ShopTab.PACKS)
 	quests_button.pressed.connect(func(): _show_info_view(InfoView.QUESTS))
 	login_reward_claim_button.pressed.connect(ProfilePanel.on_claim_login_reward_pressed.bind(self))
 	discord_button.pressed.connect(_on_discord_pressed)
@@ -179,7 +190,7 @@ func _ready() -> void:
 	profile_button.pressed.connect(_on_profile_button_pressed)
 	settings_button.pressed.connect(func(): _show_info_view(InfoView.SETTINGS))
 	if pack_shop.has_signal("closed"):
-		pack_shop.closed.connect(func(): _show_info_view(InfoView.NEWS))
+		pack_shop.closed.connect(func(): _show_info_view(InfoView.SHOP))
 
 	deck_comp_preview_card.set_non_interactive()
 	# La carte reste à sa taille NATIVE (des enfants comme les labels sont
@@ -339,12 +350,39 @@ func _wire_nav_active_indicators() -> void:
 		InfoView.SETTINGS: settings_button,
 		InfoView.REPORT: report_button,
 		InfoView.CREDITS: credits_button,
+		InfoView.SHOP: shop_button,
+		InfoView.PACK_SHOP: shop_button,
 	}
 
 func _update_nav_active_indicators(view: InfoView) -> void:
-	for v in _nav_active_buttons:
-		var btn: BaseButton = _nav_active_buttons[v]
-		btn.self_modulate = NAV_ACTIVE_TINT if v == view else Color.WHITE
+	# Deux entrées (SHOP/PACK_SHOP) peuvent pointer vers le même bouton
+	# (shop_button) : ne pas teinter/déteindre dans la boucle au fil de
+	# l'itération (l'ordre du dictionnaire écraserait la teinte selon la clé
+	# rencontrée en dernier) — tout repasser en blanc d'abord, puis teinter
+	# uniquement le bouton de la vue active.
+	for btn: BaseButton in _nav_active_buttons.values():
+		btn.self_modulate = Color.WHITE
+	var active_btn: BaseButton = _nav_active_buttons.get(view)
+	if active_btn:
+		active_btn.self_modulate = NAV_ACTIVE_TINT
+
+# --- Boutique : mini-navbar Packs / Dos de cartes -------------------------
+# Deux onglets à l'intérieur de la même vue (InfoView.SHOP), plutôt que deux
+# InfoView séparées : contrairement à Packs (InfoView.PACK_SHOP, un écran
+# plein cadre à part entière avec sa propre animation d'ouverture de pack),
+# les dos de carte n'ont besoin que d'une simple grille — pas assez de
+# contenu pour justifier sa propre entrée de navigation.
+var _shop_tab: ShopTab = ShopTab.PACKS
+
+func _select_shop_tab(tab: ShopTab) -> void:
+	_shop_tab = tab
+	shop_packs_section.visible = tab == ShopTab.PACKS
+	shop_card_backs_section.visible = tab == ShopTab.CARD_BACKS
+	shop_packs_tab_button.self_modulate = NAV_ACTIVE_TINT if tab == ShopTab.PACKS else Color.WHITE
+	shop_card_backs_tab_button.self_modulate = NAV_ACTIVE_TINT if tab == ShopTab.CARD_BACKS else Color.WHITE
+	if tab == ShopTab.CARD_BACKS:
+		# Reconstruit à chaque affichage pour refléter la sélection courante.
+		ShopCardBacksPanel.build_into(shop_card_backs_section, func(): _select_shop_tab(ShopTab.CARD_BACKS))
 
 # Pastille rouge sur le bouton Quêtes du dock (façon MTGA), visible dès le
 # menu principal sans avoir besoin d'ouvrir le panneau — indique combien de
@@ -416,10 +454,10 @@ func _apply_tutorial_lock() -> void:
 	var locked: bool = not SettingsManager.tutorial_completed
 	multi_mode_button.disabled = locked
 	decks_button.disabled = locked
-	packs_button.disabled = locked
+	shop_button.disabled = locked
 	multi_mode_button.tooltip_text = SettingsManager.t("MENU_LOCKED_TUTORIAL") if locked else ""
 	decks_button.tooltip_text = SettingsManager.t("MENU_LOCKED_TUTORIAL") if locked else ""
-	packs_button.tooltip_text = SettingsManager.t("MENU_LOCKED_TUTORIAL") if locked else ""
+	shop_button.tooltip_text = SettingsManager.t("MENU_LOCKED_TUTORIAL") if locked else ""
 
 # Enchaîne auth Steam -> mapping id carte backend -> chargement des decks
 # en tâche de fond, sans bloquer l'affichage du menu. Si une étape échoue
@@ -461,14 +499,15 @@ func _launch_backend_syncs() -> void:
 
 func _show_info_view(view: InfoView) -> void:
 	_current_info_view = view
-	var views: Array = [news_view, deck_composition_view, credits_view, pack_shop,
+	var views: Array = [news_view, deck_composition_view, credits_view, shop_view, pack_shop,
 		profile_view, settings_menu, deck_list, report_view, quests_view,
 		mode_select_view, deck_select_view]
 	var active: Control = {
 		InfoView.NEWS: news_view,
 		InfoView.DECK_COMPOSITION: deck_composition_view,
 		InfoView.CREDITS: credits_view,
-		InfoView.SHOP: pack_shop,
+		InfoView.SHOP: shop_view,
+		InfoView.PACK_SHOP: pack_shop,
 		InfoView.PROFILE: profile_view,
 		InfoView.SETTINGS: settings_menu,
 		InfoView.DECKS_MANAGE: deck_list,
@@ -497,6 +536,8 @@ func _show_info_view(view: InfoView) -> void:
 	elif view == InfoView.QUESTS:
 		QuestsPanel.open(self)
 	elif view == InfoView.SHOP:
+		_select_shop_tab(_shop_tab)
+	elif view == InfoView.PACK_SHOP:
 		if pack_shop.has_method("refresh"):
 			pack_shop.refresh()
 
@@ -554,7 +595,7 @@ func _on_decks_button_pressed() -> void:
 	AudioManager.play(AudioManager.OPEN_MENU)
 	_show_info_view(InfoView.DECKS_MANAGE)
 
-func _on_packs_button_pressed() -> void:
+func _on_shop_button_pressed() -> void:
 	_show_info_view(InfoView.SHOP)
 
 # --- Flux "Jouer" : mode puis deck, directement dans le panneau d'infos ----
@@ -743,8 +784,13 @@ func _on_launch_pressed() -> void:
 			CustomMatchContext.ai_difficulty_override = SettingsManager.AI_DIFFICULTIES[chosen_index]
 		SceneTransition.change_scene(BATTLE_SCENE)
 	else:
+		# Contrairement au solo, ne quitte pas MainMenu : le choix du mode
+		# (Normal/Classé/Ami) s'affiche en popup par-dessus, puis le bandeau de
+		# recherche (MatchmakingOverlay, autoload persistant) prend le relais
+		# pendant que le joueur continue de naviguer où il veut (deck builder,
+		# boutique...) jusqu'à ce qu'un adversaire soit trouvé.
 		AudioManager.play(AudioManager.OPEN_MENU)
-		SceneTransition.change_scene(NET_LOBBY_SCENE)
+		MatchmakingOverlay.open_mode_picker()
 
 func _on_discord_pressed() -> void:
 	OS.shell_open(DISCORD_URL)
@@ -767,7 +813,12 @@ func _retranslate() -> void:
 	subtitle_label.text = SettingsManager.t("MENU_SUBTITLE")
 	play_button.text    = SettingsManager.t("MENU_PLAY")
 	decks_button.text   = SettingsManager.t("MENU_DECKS")
-	packs_button.text   = SettingsManager.t("MENU_PACKS")
+	shop_button.text   = SettingsManager.t("MENU_SHOP_TITLE")
+	shop_title_label.text = SettingsManager.t("MENU_SHOP_TITLE")
+	shop_packs_tab_button.text = SettingsManager.t("pack_shop.title")
+	shop_card_backs_tab_button.text = SettingsManager.t("SHOP_TAB_CARD_BACKS")
+	open_pack_shop_button.text = SettingsManager.t("MENU_SHOP_OPEN_BUTTON")
+	shop_card_backs_hint_label.text = SettingsManager.t("SHOP_CARD_BACKS_HINT")
 	currency_label.text = str(CurrencyManager.balance)
 	settings_button.text = SettingsManager.t("MENU_SETTINGS")
 	credits_button.text = SettingsManager.t("MENU_CREDITS")
