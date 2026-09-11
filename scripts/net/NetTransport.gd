@@ -62,8 +62,14 @@ func close() -> void:
 func invite_friends() -> void:
 	pass
 
+# Ouvre l'UI "ajouter en ami" du backend ciblant le pair distant actuellement
+# connecté, si applicable (no-op sinon — seul SteamTransport l'implémente).
+# Voir GameOverScreen (bouton "Ajouter comme ami" après une partie réseau).
+func open_add_friend_overlay() -> void:
+	pass
+
 # Nom d'affichage du pair distant (ex. pseudo Steam), si le backend peut le
 # fournir. Chaîne vide si non applicable ou pas encore connu (voir écran de
-# présentation VS, NetLobby._show_vs_screen).
+# présentation VS/historique de parties/liste "joueurs récents").
 func remote_display_name() -> String:
 	return ""

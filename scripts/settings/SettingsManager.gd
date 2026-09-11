@@ -14,6 +14,7 @@ signal ai_difficulty_changed(level: String)
 signal display_settings_changed
 signal keybind_changed(action: String, keycode: int)
 signal match_stats_changed(wins: int, losses: int)
+signal account_xp_changed(total_xp: int)
 signal reduced_motion_changed(enabled: bool)
 signal high_contrast_changed(enabled: bool)
 
@@ -100,13 +101,21 @@ const MATCH_HISTORY_MAX_ENTRIES := 20
 # cassée par toute défaite ou toute victoire où le PV plancher est franchi.
 var high_hp_win_streak: int = 0
 # Niveau de compte — progression purement locale (même statut que match_wins
-# ci-dessus, aucune notion de niveau côté backend). Sert de condition de
+# ci-dessus, aucune notion de niveau côté backend : monnaie/cartes/cosmétiques
+# restent entièrement autoritaires côté serveur). Sert de condition de
 # déblocage pour les titres/cadres de profil (voir ProfileCosmetics) et pour
 # les cosmétiques de dos de carte (voir CosmeticsManager).
 var account_xp: int = 0
 const ACCOUNT_XP_PER_LEVEL := 1000
 const ACCOUNT_XP_WIN := 150
 const ACCOUNT_XP_LOSS := 50
+# Pseudos des derniers adversaires réseau affrontés (le plus récent en tête),
+# purement local — jamais leur SteamID64 (voir NetTransport.remote_display_name/
+# règle "aucun identifiant Steam ne fuit hors de SteamTransport"). "Ajouter en
+# ami" n'est donc proposé que juste après la partie (voir GameOverScreen),
+# jamais depuis cette liste rétrospective.
+var recent_opponents: Array[String] = []
+const RECENT_OPPONENTS_MAX := 10
 # Index du titre/cadre de profil choisi (voir ProfileCosmetics.TITLES/FRAMES).
 var selected_title: int = 0
 var selected_frame: int = 0
@@ -214,6 +223,14 @@ func award_account_xp(amount: int) -> void:
 	if amount <= 0:
 		return
 	account_xp += amount
+	_save()
+	account_xp_changed.emit(account_xp)
+
+func record_recent_opponent(opponent_name: String) -> void:
+	recent_opponents.erase(opponent_name)
+	recent_opponents.push_front(opponent_name)
+	if recent_opponents.size() > RECENT_OPPONENTS_MAX:
+		recent_opponents.resize(RECENT_OPPONENTS_MAX)
 	_save()
 
 func set_selected_title(index: int) -> void:
@@ -485,6 +502,7 @@ func _save() -> void:
 	cfg.set_value("stats", "match_losses", match_losses)
 	cfg.set_value("stats", "match_history", match_history)
 	cfg.set_value("stats", "account_xp", account_xp)
+	cfg.set_value("stats", "recent_opponents", recent_opponents)
 	cfg.set_value("stats", "selected_title", selected_title)
 	cfg.set_value("stats", "selected_frame", selected_frame)
 	cfg.set_value("stats", "selected_card_back", selected_card_back)
@@ -526,6 +544,12 @@ func _load() -> void:
 	var saved_history = cfg.get_value("stats", "match_history", [])
 	match_history = saved_history if saved_history is Array else []
 	account_xp = cfg.get_value("stats", "account_xp", 0) as int
+	var saved_recent = cfg.get_value("stats", "recent_opponents", [])
+	recent_opponents.clear()
+	if saved_recent is Array:
+		for name in saved_recent:
+			if name is String:
+				recent_opponents.append(name)
 	selected_title = cfg.get_value("stats", "selected_title", 0) as int
 	selected_frame = cfg.get_value("stats", "selected_frame", 0) as int
 	selected_card_back = cfg.get_value("stats", "selected_card_back", 0) as int

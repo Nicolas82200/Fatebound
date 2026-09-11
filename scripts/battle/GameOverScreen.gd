@@ -7,6 +7,7 @@ class_name GameOverScreen
 
 signal replay_requested
 signal menu_requested
+signal add_friend_requested
 
 const TITLE_VICTORY_COLOR    := Color(0.95, 0.82, 0.35)
 const TITLE_DEFEAT_COLOR     := Color(0.85, 0.25, 0.2)
@@ -22,6 +23,7 @@ const PANEL_ZOOM_TIME   := 0.35
 @onready var replay_button: Button   = $Panel/VBox/ButtonsMargin/ButtonsVBox/ReplayButton
 @onready var menu_button: Button     = $Panel/VBox/ButtonsMargin/ButtonsVBox/MenuButton
 @onready var reward_label: Label     = $Panel/VBox/RewardLabel
+@onready var add_friend_button: Button = $Panel/VBox/ButtonsMargin/ButtonsVBox/AddFriendButton
 @onready var view_replay_button: Button = $Panel/VBox/ButtonsMargin/ButtonsVBox/ViewReplayButton
 @onready var stats_grid: GridContainer = $Panel/VBox/StatsMargin/StatsGrid
 @onready var duration_key: Label  = $Panel/VBox/StatsMargin/StatsGrid/DurationKey
@@ -48,9 +50,11 @@ func _ready() -> void:
 	quests_box.hide()
 	_style_button(replay_button)
 	_style_button(menu_button)
+	_style_button(add_friend_button)
 	_style_button(view_replay_button)
 	replay_button.pressed.connect(func(): replay_requested.emit())
 	menu_button.pressed.connect(func(): menu_requested.emit())
+	add_friend_button.pressed.connect(func(): add_friend_requested.emit())
 	view_replay_button.pressed.connect(_on_view_replay_pressed)
 	_replay_view = MatchReplayView.new()
 	add_child(_replay_view)
@@ -67,8 +71,10 @@ func _on_view_replay_pressed() -> void:
 
 # Affiche l'écran pour le résultat donné. En réseau, rejouer n'a pas de sens
 # (relancer la scène repartirait en solo contre l'IA, et en déconnexion le pair
-# est parti) : seul le retour au menu est proposé.
-func show_result(result: String, allow_replay: bool = true) -> void:
+# est parti) : seul le retour au menu est proposé. show_add_friend (réseau
+# uniquement, hors déconnexion) ouvre l'overlay Steam "ajouter en ami" ciblant
+# l'adversaire qui vient d'être affronté (voir Battle._on_add_friend_pressed).
+func show_result(result: String, allow_replay: bool = true, show_add_friend: bool = false) -> void:
 	_result = result
 	_reward_amount = 0
 	_stats = {}
@@ -76,6 +82,7 @@ func show_result(result: String, allow_replay: bool = true) -> void:
 	stats_grid.hide()
 	quests_box.hide()
 	replay_button.visible = allow_replay and result != "disconnect"
+	add_friend_button.visible = show_add_friend and result != "disconnect"
 	match result:
 		"defeat":
 			title_label.add_theme_color_override("font_color", TITLE_DEFEAT_COLOR)
@@ -189,6 +196,7 @@ func _retranslate() -> void:
 			subtitle_label.text = SettingsManager.t("battle.gameover.victory_sub")
 	replay_button.text = SettingsManager.t("battle.gameover.replay")
 	menu_button.text   = SettingsManager.t("battle.gameover.menu")
+	add_friend_button.text = SettingsManager.t("battle.gameover.add_friend")
 	view_replay_button.text = SettingsManager.t("battle.gameover.view_replay")
 	if _reward_amount > 0:
 		reward_label.text = SettingsManager.t("battle.gameover.reward") % _reward_amount

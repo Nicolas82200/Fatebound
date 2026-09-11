@@ -70,6 +70,11 @@ func invite_friends() -> void:
 	if transport != null:
 		transport.invite_friends()
 
+# Voir NetTransport.open_add_friend_overlay.
+func open_add_friend_overlay() -> void:
+	if transport != null:
+		transport.open_add_friend_overlay()
+
 # Nom d'affichage du pair distant (voir NetTransport.remote_display_name).
 # Chaîne vide si transport absent ou backend incapable de le fournir.
 func remote_display_name() -> String:

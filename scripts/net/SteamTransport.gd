@@ -119,6 +119,11 @@ func invite_friends() -> void:
 		return
 	_steam.activateGameOverlayInviteDialog(_lobby_id)
 
+func open_add_friend_overlay() -> void:
+	if _steam == null or _remote_id == 0:
+		return
+	_steam.activateGameOverlayToUser("steamid_friend_add", _remote_id)
+
 func remote_display_name() -> String:
 	if _steam == null or _remote_id == 0:
 		return ""

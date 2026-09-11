@@ -20,6 +20,7 @@ static func open(menu) -> void:
 	_show_placeholders(menu)
 	_fetch(menu)
 	ReferralPanel.open(menu)
+	RecentOpponentsPanel.open(menu)
 	MatchHistoryPanel.open(menu)
 	ProfileCosmeticsPanel.open(menu)
 	CosmeticsPanel.open(menu)
