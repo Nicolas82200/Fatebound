@@ -23,16 +23,29 @@ const PANEL_ZOOM_TIME   := 0.35
 @onready var menu_button: Button     = $Panel/VBox/ButtonsMargin/ButtonsVBox/MenuButton
 @onready var reward_label: Label     = $Panel/VBox/RewardLabel
 @onready var view_replay_button: Button = $Panel/VBox/ButtonsMargin/ButtonsVBox/ViewReplayButton
+@onready var stats_grid: GridContainer = $Panel/VBox/StatsMargin/StatsGrid
+@onready var duration_key: Label  = $Panel/VBox/StatsMargin/StatsGrid/DurationKey
+@onready var duration_value: Label = $Panel/VBox/StatsMargin/StatsGrid/DurationValue
+@onready var quests_box: VBoxContainer    = $Panel/VBox/QuestsMargin/QuestsBox
+@onready var quests_header: Label         = $Panel/VBox/QuestsMargin/QuestsBox/QuestsHeader
+@onready var quests_status: Label         = $Panel/VBox/QuestsMargin/QuestsBox/QuestsStatus
+@onready var quests_list: VBoxContainer   = $Panel/VBox/QuestsMargin/QuestsBox/QuestsList
 
 # "victory" | "defeat" | "disconnect" — mémorisé pour retraduire à la volée.
 var _result: String = "victory"
 var _reward_amount: int = 0
 var _replay_view: MatchReplayView
+# Statistiques de la partie qui vient de se terminer (voir show_stats), affichées
+# sous la récompense — vide (grille masquée) tant que show_stats n'a pas été
+# appelé, ex: écran de déconnexion sans stats calculées.
+var _stats: Dictionary = {}
 
 func _ready() -> void:
 	hide()
 	reward_label.hide()
 	view_replay_button.hide()
+	stats_grid.hide()
+	quests_box.hide()
 	_style_button(replay_button)
 	_style_button(menu_button)
 	_style_button(view_replay_button)
@@ -58,7 +71,10 @@ func _on_view_replay_pressed() -> void:
 func show_result(result: String, allow_replay: bool = true) -> void:
 	_result = result
 	_reward_amount = 0
+	_stats = {}
 	reward_label.hide()
+	stats_grid.hide()
+	quests_box.hide()
 	replay_button.visible = allow_replay and result != "disconnect"
 	match result:
 		"defeat":
@@ -93,6 +109,73 @@ func show_reward(amount: int) -> void:
 	reward_label.text = SettingsManager.t("battle.gameover.reward") % amount
 	reward_label.show()
 
+# Appelé par Battle._show_game_over juste après show_result, avec la durée du
+# match ("duration_sec", formatée en MM:SS).
+func show_stats(stats: Dictionary) -> void:
+	_stats = stats
+	stats_grid.show()
+	_update_stats_labels()
+
+func _update_stats_labels() -> void:
+	if _stats.is_empty():
+		return
+	var total_sec: int = int(_stats.get("duration_sec", 0))
+	duration_value.text = "%d:%02d" % [total_sec / 60, total_sec % 60]
+
+# Appelé par Battle._show_game_over : récupère et affiche l'avancée des quêtes
+# quotidiennes (lecture seule — la réclamation reste dans l'onglet Quêtes du
+# menu principal). Pas de section hebdo/unique ici : rester compact sur un
+# écran déjà chargé (résultat, récompense, durée, actions).
+func show_quests() -> void:
+	quests_box.show()
+	quests_status.show()
+	quests_status.text = SettingsManager.t("PROFILE_LOADING")
+	for child in quests_list.get_children():
+		child.queue_free()
+	if not BackendClient.is_authenticated():
+		quests_status.text = SettingsManager.t("QUESTS_UNAVAILABLE")
+		return
+	BackendClient.get_daily_quests(func(success: bool, data: Dictionary):
+		# L'écran peut avoir été refermé (Rejouer/Menu) avant la réponse réseau.
+		if not is_instance_valid(self) or not visible:
+			return
+		if not success:
+			quests_status.text = SettingsManager.t("QUESTS_UNAVAILABLE")
+			return
+		var quests: Array = data.get("quests", [])
+		quests_status.hide()
+		if quests.is_empty():
+			quests_status.show()
+			quests_status.text = SettingsManager.t("QUESTS_UNAVAILABLE")
+			return
+		for quest in quests:
+			_add_quest_row(quest)
+	)
+
+static func _get_quest_int(quest: Dictionary, key: String, default: int) -> int:
+	var value = quest.get(key, default)
+	return default if value == null else int(value)
+
+static func _get_quest_str(quest: Dictionary, key: String, default: String) -> String:
+	var value = quest.get(key, default)
+	return default if value == null else String(value)
+
+func _add_quest_row(quest: Dictionary) -> void:
+	var progress := _get_quest_int(quest, "progress", 0)
+	var target := _get_quest_int(quest, "target", 1)
+	var completed := progress >= target
+	var row := Label.new()
+	row.autowrap_mode = TextServer.AUTOWRAP_WORD
+	row.add_theme_font_size_override("font_size", 14)
+	# Coche en préfixe plutôt qu'une distinction uniquement par couleur (voir
+	# accessibilité dans CLAUDE.md) : quête accomplie vs en cours.
+	var prefix := "✓ " if completed else "• "
+	row.add_theme_color_override("font_color",
+			Color(0.92, 0.72, 0.28, 0.95) if completed else Color(0.85, 0.8, 0.72, 0.85))
+	var desc := SettingsManager.t(_get_quest_str(quest, "description_key", ""))
+	row.text = "%s%s (%d/%d)" % [prefix, desc, progress, target]
+	quests_list.add_child(row)
+
 func _retranslate() -> void:
 	match _result:
 		"defeat":
@@ -109,6 +192,9 @@ func _retranslate() -> void:
 	view_replay_button.text = SettingsManager.t("battle.gameover.view_replay")
 	if _reward_amount > 0:
 		reward_label.text = SettingsManager.t("battle.gameover.reward") % _reward_amount
+	duration_key.text    = SettingsManager.t("battle.gameover.stats.duration")
+	_update_stats_labels()
+	quests_header.text   = SettingsManager.t("battle.gameover.quests_title")
 
 # Même habillage que les boutons du menu réglages (SettingsMenu.gd).
 func _style_button(btn: Button) -> void:
