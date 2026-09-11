@@ -21,6 +21,7 @@ static func open(menu) -> void:
 	_fetch(menu)
 	ReferralPanel.open(menu)
 	ProfileCosmeticsPanel.open(menu)
+	SupporterPackPanel.open(menu)
 
 # Titre + cadre de profil (voir ProfileCosmetics) — purement locaux, appliqués
 # indépendamment de toute réponse backend.
