@@ -443,7 +443,7 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.8, 0.72, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
 theme_override_font_sizes/font_size = 13
-text = "—"
+text = "-"
 autowrap_mode = 3
 
 [node name="AccountLevelLabel" type="Label" parent="NavPanel/NavMargin/NavStack/MainNavView/PlayerStatusPanel/PlayerMargin/PlayerVBox" unique_id=900000001]
@@ -515,7 +515,7 @@ theme_override_colors/font_color = Color(0.91, 0.835, 0.639, 0.5)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
 theme_override_fonts/font = ExtResource("6_subtitle")
 theme_override_font_sizes/font_size = 14
-text = "v0.1 — prototype"
+text = "v0.1 - prototype"
 vertical_alignment = 1
 
 [node name="DiscordButton" type="TextureButton" parent="FooterPanel/FooterMargin/FooterRow" unique_id=300000051]
@@ -718,7 +718,6 @@ layout_mode = 2
 theme_override_constants/separation = 14
 
 [node name="ProfileAvatarFrame" type="PanelContainer" parent="InfoPanel/InfoMargin/ViewsRoot/ProfileView/ProfileScroll/ProfileBodyVBox/ProfileHeaderRow" unique_id=900000020]
-unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
 
@@ -741,13 +740,6 @@ theme_override_font_sizes/font_size = 22
 text = "Pseudo Steam"
 vertical_alignment = 1
 
-[node name="ProfileTitleLabel" type="Label" parent="InfoPanel/InfoMargin/ViewsRoot/ProfileView/ProfileScroll/ProfileBodyVBox/ProfileHeaderRow/ProfileNameCol" unique_id=900000022]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.75, 0.7, 0.6, 0.9)
-theme_override_font_sizes/font_size = 14
-text = ""
-
 [node name="ProfileStatsSep" type="HSeparator" parent="InfoPanel/InfoMargin/ViewsRoot/ProfileView/ProfileScroll/ProfileBodyVBox" unique_id=731961068]
 layout_mode = 2
 
@@ -761,31 +753,31 @@ text = "0V - 0D"
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.8, 0.72, 1)
 theme_override_font_sizes/font_size = 16
-text = "—"
+text = "-"
 
 [node name="ProfileCollectionLabel" type="Label" parent="InfoPanel/InfoMargin/ViewsRoot/ProfileView/ProfileScroll/ProfileBodyVBox" unique_id=992127025]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.8, 0.72, 1)
 theme_override_font_sizes/font_size = 16
-text = "—"
+text = "-"
 
 [node name="ProfileSoloStatsLabel" type="Label" parent="InfoPanel/InfoMargin/ViewsRoot/ProfileView/ProfileScroll/ProfileBodyVBox" unique_id=194106145]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.8, 0.72, 1)
 theme_override_font_sizes/font_size = 16
-text = "—"
+text = "-"
 
 [node name="ProfileRankedStatsLabel" type="Label" parent="InfoPanel/InfoMargin/ViewsRoot/ProfileView/ProfileScroll/ProfileBodyVBox" unique_id=1136697271]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.91, 0.835, 0.639, 1)
 theme_override_font_sizes/font_size = 16
-text = "—"
+text = "-"
 
 [node name="ProfileRankBadgeLabel" type="Label" parent="InfoPanel/InfoMargin/ViewsRoot/ProfileView/ProfileScroll/ProfileBodyVBox" unique_id=1136697272]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.8, 0.72, 1)
 theme_override_font_sizes/font_size = 16
-text = "—"
+text = "-"
 
 [node name="CreditsView" type="VBoxContainer" parent="InfoPanel/InfoMargin/ViewsRoot" unique_id=1875120101]
 visible = false
@@ -954,6 +946,85 @@ embedded_in_panel = true
 [node name="DeckList" parent="InfoPanel/InfoMargin/ViewsRoot" unique_id=300000002 instance=ExtResource("4_decklist")]
 visible = false
 layout_mode = 1
+
+[node name="ShopView" type="VBoxContainer" parent="InfoPanel/InfoMargin/ViewsRoot" unique_id=300000090]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="ShopTitleLabel" type="Label" parent="InfoPanel/InfoMargin/ViewsRoot/ShopView" unique_id=300000091]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.91, 0.835, 0.639, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_fonts/font = ExtResource("3_xwq4k")
+theme_override_font_sizes/font_size = 26
+text = "Boutique"
+
+[node name="ShopTabsRow" type="HBoxContainer" parent="InfoPanel/InfoMargin/ViewsRoot/ShopView" unique_id=300000102]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ShopPacksTabButton" type="Button" parent="InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopTabsRow" unique_id=300000103]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_fonts/font = ExtResource("6_subtitle")
+theme_override_font_sizes/font_size = 15
+text = "Packs"
+
+[node name="ShopCardBacksTabButton" type="Button" parent="InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopTabsRow" unique_id=300000104]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_fonts/font = ExtResource("6_subtitle")
+theme_override_font_sizes/font_size = 15
+text = "Dos de cartes"
+
+[node name="ShopSep" type="HSeparator" parent="InfoPanel/InfoMargin/ViewsRoot/ShopView" unique_id=300000092]
+layout_mode = 2
+
+[node name="ShopScroll" type="ScrollContainer" parent="InfoPanel/InfoMargin/ViewsRoot/ShopView" unique_id=300000093]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ShopBody" type="VBoxContainer" parent="InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopScroll" unique_id=300000094]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 20
+
+[node name="PacksSection" type="VBoxContainer" parent="InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopScroll/ShopBody" unique_id=300000095]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="OpenPackShopButton" type="Button" parent="InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopScroll/ShopBody/PacksSection" unique_id=300000097]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_colors/font_color = Color(0.078, 0.055, 0.02, 1)
+theme_override_colors/font_pressed_color = Color(0.078, 0.055, 0.02, 1)
+theme_override_colors/font_hover_color = Color(0.05, 0.035, 0.012, 1)
+theme_override_fonts/font = ExtResource("3_xwq4k")
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxFlat_play_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_play_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_play_hover")
+text = "Ouvrir la boutique de packs"
+
+[node name="CardBacksSection" type="VBoxContainer" parent="InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopScroll/ShopBody" unique_id=300000099]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="CardBacksHintLabel" type="Label" parent="InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopScroll/ShopBody/CardBacksSection" unique_id=300000100]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.8, 0.72, 0.9)
+autowrap_mode = 3
+text = "Débloqués gratuitement en progressant (niveau de compte)."
 
 [node name="PackShop" parent="InfoPanel/InfoMargin/ViewsRoot" unique_id=300000033 instance=ExtResource("7_packshop")]
 visible = false
