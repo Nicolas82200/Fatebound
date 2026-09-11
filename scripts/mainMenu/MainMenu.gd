@@ -2,7 +2,6 @@
 extends Control
 
 const BATTLE_SCENE := "res://scenes/battle/Battle.tscn"
-const NET_LOBBY_SCENE := "res://scenes/net/NetLobby.tscn"
 const ARENA_SCENE := "res://scenes/arena/ArenaBattle.tscn"
 const NEWS_DIR := "res://resources/news/"
 const NEWS_FEED_URL := "https://wyrdane.com/feed.json"
@@ -743,8 +742,13 @@ func _on_launch_pressed() -> void:
 			CustomMatchContext.ai_difficulty_override = SettingsManager.AI_DIFFICULTIES[chosen_index]
 		SceneTransition.change_scene(BATTLE_SCENE)
 	else:
+		# Contrairement au solo, ne quitte pas MainMenu : le choix du mode
+		# (Normal/Classé/Ami) s'affiche en popup par-dessus, puis le bandeau de
+		# recherche (MatchmakingOverlay, autoload persistant) prend le relais
+		# pendant que le joueur continue de naviguer où il veut (deck builder,
+		# boutique...) jusqu'à ce qu'un adversaire soit trouvé.
 		AudioManager.play(AudioManager.OPEN_MENU)
-		SceneTransition.change_scene(NET_LOBBY_SCENE)
+		MatchmakingOverlay.open_mode_picker()
 
 func _on_discord_pressed() -> void:
 	OS.shell_open(DISCORD_URL)
