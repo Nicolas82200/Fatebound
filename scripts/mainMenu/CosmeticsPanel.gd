@@ -1,11 +1,13 @@
 extends RefCounted
 class_name CosmeticsPanel
 
-# Section "Cosmétiques", ajoutée dynamiquement en bas de la vue Profil — même
-# esprit que ReferralPanel. Sélection du dos de carte parmi ceux débloqués par
-# le niveau de compte local (voir CosmeticsManager/SettingsManager.account_level).
-# Purement cosmétique, aucun impact gameplay (voir CLAUDE.md, "éviter le
-# Pay-to-Win").
+# Sélection de dos de carte parmi ceux débloqués par le niveau de compte local
+# (voir CosmeticsManager/SettingsManager.account_level). Purement cosmétique,
+# aucun impact gameplay (voir CLAUDE.md, "éviter le Pay-to-Win"). Affichée à
+# deux endroits : section "Cosmétiques" en bas de la vue Profil (open, avec
+# son propre titre/séparateur — même esprit que ReferralPanel) et onglet
+# "Dos de cartes" de la Boutique (build_into directement, le titre y étant
+# déjà porté par l'onglet — voir MainMenu.gd).
 
 const SWATCH_SIZE := Vector2(56, 84)
 
@@ -27,15 +29,27 @@ static func open(menu) -> void:
 	title.add_theme_color_override("font_color", Color(0.91, 0.835, 0.639, 1))
 	section.add_child(title)
 
+	build_into(section, func(): open(menu))
+
+## Construit la grille de dos de carte directement dans `parent` (vidé
+## d'abord), avec `on_selection_changed` rappelé après chaque sélection pour
+## que l'appelant puisse se reconstruire lui-même (état "sélectionné"/"verrouillé"
+## à jour) sans que ce script ait besoin de connaître son conteneur d'origine.
+static func build_into(parent: Control, on_selection_changed: Callable) -> void:
+	for child in parent.get_children():
+		if child is HBoxContainer and child.name == "CosmeticsSwatchRow":
+			child.queue_free()
+
 	var row := HBoxContainer.new()
+	row.name = "CosmeticsSwatchRow"
 	row.add_theme_constant_override("separation", 10)
-	section.add_child(row)
+	parent.add_child(row)
 
 	var card_back_tex: Texture2D = load("res://assets/card_back/card-back.png")
 	for i in CosmeticsManager.CARD_BACKS.size():
-		row.add_child(_make_swatch(menu, i, card_back_tex))
+		row.add_child(_make_swatch(i, card_back_tex, on_selection_changed))
 
-static func _make_swatch(menu, index: int, card_back_tex: Texture2D) -> VBoxContainer:
+static func _make_swatch(index: int, card_back_tex: Texture2D, on_selection_changed: Callable) -> VBoxContainer:
 	var cb: Dictionary = CosmeticsManager.CARD_BACKS[index]
 	var unlocked: bool = CosmeticsManager.is_unlocked(index)
 	var is_selected: bool = SettingsManager.selected_card_back == index
@@ -72,7 +86,7 @@ static func _make_swatch(menu, index: int, card_back_tex: Texture2D) -> VBoxCont
 		action_button.text = SettingsManager.t("COSMETICS_SELECT")
 		action_button.pressed.connect(func():
 			CosmeticsManager.select_card_back(index)
-			open(menu)
+			on_selection_changed.call()
 		)
 	col.add_child(action_button)
 

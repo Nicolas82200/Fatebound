@@ -13,6 +13,7 @@ const WEBSITE_DEVLOG_PATH := "/dev-log"
 const DECK_BUILDER_SCENE := "res://scenes/deck/DeckBuilder.tscn"
 
 enum PlayMode { SOLO, MULTI }
+enum ShopTab { PACKS, CARD_BACKS }
 enum InfoView { NEWS, DECK_COMPOSITION, PROFILE, CREDITS, SETTINGS, DECKS_MANAGE, SHOP, PACK_SHOP, REPORT, QUESTS, MODE_SELECT, DECK_SELECT }
 
 # Couleur d'accent affichée en bandeau à gauche de chaque ligne de deck, selon
@@ -94,10 +95,12 @@ const CUSTOM_DIFFICULTY_LABEL_KEYS := {
 
 @onready var shop_view:            VBoxContainer = $InfoPanel/InfoMargin/ViewsRoot/ShopView
 @onready var open_pack_shop_button: Button = $InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopScroll/ShopBody/PacksSection/OpenPackShopButton
-@onready var shop_cosmetics_title_label: Label = $InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopScroll/ShopBody/CosmeticsSection/CosmeticsSectionTitle
-@onready var shop_cosmetics_placeholder_label: Label = $InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopScroll/ShopBody/CosmeticsSection/CosmeticsPlaceholderLabel
-@onready var shop_packs_title_label: Label = $InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopScroll/ShopBody/PacksSection/PacksSectionTitle
 @onready var shop_title_label: Label = $InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopTitleLabel
+@onready var shop_packs_tab_button: Button = $InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopTabsRow/ShopPacksTabButton
+@onready var shop_card_backs_tab_button: Button = $InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopTabsRow/ShopCardBacksTabButton
+@onready var shop_packs_section: VBoxContainer = $InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopScroll/ShopBody/PacksSection
+@onready var shop_card_backs_section: VBoxContainer = $InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopScroll/ShopBody/CardBacksSection
+@onready var shop_card_backs_hint_label: Label = $InfoPanel/InfoMargin/ViewsRoot/ShopView/ShopScroll/ShopBody/CardBacksSection/CardBacksHintLabel
 
 @onready var news_view:       VBoxContainer = $InfoPanel/InfoMargin/ViewsRoot/NewsView
 @onready var news_title_label: Label = $InfoPanel/InfoMargin/ViewsRoot/NewsView/NewsTitleLabel
@@ -179,6 +182,9 @@ func _ready() -> void:
 	decks_button.pressed.connect(_on_decks_button_pressed)
 	shop_button.pressed.connect(_on_shop_button_pressed)
 	open_pack_shop_button.pressed.connect(func(): _show_info_view(InfoView.PACK_SHOP))
+	shop_packs_tab_button.pressed.connect(func(): _select_shop_tab(ShopTab.PACKS))
+	shop_card_backs_tab_button.pressed.connect(func(): _select_shop_tab(ShopTab.CARD_BACKS))
+	_select_shop_tab(ShopTab.PACKS)
 	quests_button.pressed.connect(func(): _show_info_view(InfoView.QUESTS))
 	login_reward_claim_button.pressed.connect(ProfilePanel.on_claim_login_reward_pressed.bind(self))
 	discord_button.pressed.connect(_on_discord_pressed)
@@ -363,6 +369,25 @@ func _update_nav_active_indicators(view: InfoView) -> void:
 	if active_btn:
 		active_btn.self_modulate = NAV_ACTIVE_TINT
 
+# --- Boutique : mini-navbar Packs / Dos de cartes -------------------------
+# Deux onglets à l'intérieur de la même vue (InfoView.SHOP), plutôt que deux
+# InfoView séparées : contrairement à Packs (InfoView.PACK_SHOP, un écran
+# plein cadre à part entière avec sa propre animation d'ouverture de pack),
+# les dos de carte n'ont besoin que d'une simple grille — pas assez de
+# contenu pour justifier sa propre entrée de navigation.
+var _shop_tab: ShopTab = ShopTab.PACKS
+
+func _select_shop_tab(tab: ShopTab) -> void:
+	_shop_tab = tab
+	shop_packs_section.visible = tab == ShopTab.PACKS
+	shop_card_backs_section.visible = tab == ShopTab.CARD_BACKS
+	shop_packs_tab_button.self_modulate = NAV_ACTIVE_TINT if tab == ShopTab.PACKS else Color.WHITE
+	shop_card_backs_tab_button.self_modulate = NAV_ACTIVE_TINT if tab == ShopTab.CARD_BACKS else Color.WHITE
+	if tab == ShopTab.CARD_BACKS:
+		# Reconstruit à chaque affichage : un dos peut venir de se débloquer
+		# (montée de niveau de compte) depuis la dernière visite de l'onglet.
+		CosmeticsPanel.build_into(shop_card_backs_section, func(): _select_shop_tab(ShopTab.CARD_BACKS))
+
 # Pastille rouge sur le bouton Quêtes du dock (façon MTGA), visible dès le
 # menu principal sans avoir besoin d'ouvrir le panneau — indique combien de
 # quêtes sont réclamables tout de suite. Récupérée une première fois au
@@ -514,6 +539,8 @@ func _show_info_view(view: InfoView) -> void:
 		_open_report_view()
 	elif view == InfoView.QUESTS:
 		QuestsPanel.open(self)
+	elif view == InfoView.SHOP:
+		_select_shop_tab(_shop_tab)
 	elif view == InfoView.PACK_SHOP:
 		if pack_shop.has_method("refresh"):
 			pack_shop.refresh()
@@ -787,10 +814,10 @@ func _retranslate() -> void:
 	decks_button.text   = SettingsManager.t("MENU_DECKS")
 	shop_button.text   = SettingsManager.t("MENU_SHOP_TITLE")
 	shop_title_label.text = SettingsManager.t("MENU_SHOP_TITLE")
-	shop_packs_title_label.text = SettingsManager.t("pack_shop.title")
+	shop_packs_tab_button.text = SettingsManager.t("pack_shop.title")
+	shop_card_backs_tab_button.text = SettingsManager.t("SHOP_TAB_CARD_BACKS")
 	open_pack_shop_button.text = SettingsManager.t("MENU_SHOP_OPEN_BUTTON")
-	shop_cosmetics_title_label.text = SettingsManager.t("COSMETICS_TITLE")
-	shop_cosmetics_placeholder_label.text = SettingsManager.t("MENU_SHOP_PLACEHOLDER")
+	shop_card_backs_hint_label.text = SettingsManager.t("SHOP_CARD_BACKS_HINT")
 	currency_label.text = str(CurrencyManager.balance)
 	settings_button.text = SettingsManager.t("MENU_SETTINGS")
 	credits_button.text = SettingsManager.t("MENU_CREDITS")
