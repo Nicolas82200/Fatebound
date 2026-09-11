@@ -782,11 +782,13 @@ func _show_game_over(result: String) -> void:
 	if result == "victory" or result == "defeat":
 		SettingsManager.record_match_result(result == "victory")
 		SettingsManager.award_account_xp(SettingsManager.ACCOUNT_XP_WIN if result == "victory" else SettingsManager.ACCOUNT_XP_LOSS)
+	SettingsManager.last_match_log = combat_log.entries.duplicate()
 	if result == "victory":
 		AchievementManager.on_victory(self)
 	elif result == "defeat":
 		AchievementManager.on_defeat()
 	game_over_screen.show_result(result, network_manager == null)
+	game_over_screen.set_replay_available(not SettingsManager.last_match_log.is_empty())
 	if result == "victory" or result == "defeat":
 		game_over_screen.show_stats({
 			"duration_sec": (Time.get_ticks_msec() - match_start_msec) / 1000,

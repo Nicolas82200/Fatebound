@@ -479,6 +479,8 @@ battle.gameover.disconnect_sub,"Ton adversaire a quitté la partie.","Your oppon
 battle.gameover.replay,"Rejouer","Play again"
 battle.gameover.menu,"Menu principal","Main menu"
 battle.gameover.reward,"+%d monnaie gagnée","+%d currency earned"
+battle.gameover.view_replay,"Voir le replay","View replay"
+battle.gameover.replay_title,"Replay — Journal de combat","Replay — Combat log"
 battle.gameover.stats.duration,"Durée de la partie","Match duration"
 battle.gameover.quests_title,"Quêtes du jour","Today's quests"
 SUPPORTER_PACK_TITLE,"Wyrdane Supporter Pack","Wyrdane Supporter Pack"
