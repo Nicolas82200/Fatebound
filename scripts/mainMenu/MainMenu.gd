@@ -381,9 +381,8 @@ func _select_shop_tab(tab: ShopTab) -> void:
 	shop_packs_tab_button.self_modulate = NAV_ACTIVE_TINT if tab == ShopTab.PACKS else Color.WHITE
 	shop_card_backs_tab_button.self_modulate = NAV_ACTIVE_TINT if tab == ShopTab.CARD_BACKS else Color.WHITE
 	if tab == ShopTab.CARD_BACKS:
-		# Reconstruit à chaque affichage : un dos peut venir de se débloquer
-		# (montée de niveau de compte) depuis la dernière visite de l'onglet.
-		CosmeticsPanel.build_into(shop_card_backs_section, func(): _select_shop_tab(ShopTab.CARD_BACKS))
+		# Reconstruit à chaque affichage pour refléter la sélection courante.
+		ShopCardBacksPanel.build_into(shop_card_backs_section, func(): _select_shop_tab(ShopTab.CARD_BACKS))
 
 # Pastille rouge sur le bouton Quêtes du dock (façon MTGA), visible dès le
 # menu principal sans avoir besoin d'ouvrir le panneau — indique combien de
