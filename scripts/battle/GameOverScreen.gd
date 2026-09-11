@@ -24,6 +24,7 @@ const PANEL_ZOOM_TIME   := 0.35
 @onready var menu_button: Button     = $Panel/VBox/ButtonsMargin/ButtonsVBox/MenuButton
 @onready var reward_label: Label     = $Panel/VBox/RewardLabel
 @onready var add_friend_button: Button = $Panel/VBox/ButtonsMargin/ButtonsVBox/AddFriendButton
+@onready var view_replay_button: Button = $Panel/VBox/ButtonsMargin/ButtonsVBox/ViewReplayButton
 @onready var stats_grid: GridContainer = $Panel/VBox/StatsMargin/StatsGrid
 @onready var duration_key: Label  = $Panel/VBox/StatsMargin/StatsGrid/DurationKey
 @onready var duration_value: Label = $Panel/VBox/StatsMargin/StatsGrid/DurationValue
@@ -35,6 +36,7 @@ const PANEL_ZOOM_TIME   := 0.35
 # "victory" | "defeat" | "disconnect" — mémorisé pour retraduire à la volée.
 var _result: String = "victory"
 var _reward_amount: int = 0
+var _replay_view: MatchReplayView
 # Statistiques de la partie qui vient de se terminer (voir show_stats), affichées
 # sous la récompense — vide (grille masquée) tant que show_stats n'a pas été
 # appelé, ex: écran de déconnexion sans stats calculées.
@@ -43,15 +45,29 @@ var _stats: Dictionary = {}
 func _ready() -> void:
 	hide()
 	reward_label.hide()
+	view_replay_button.hide()
 	stats_grid.hide()
 	quests_box.hide()
 	_style_button(replay_button)
 	_style_button(menu_button)
 	_style_button(add_friend_button)
+	_style_button(view_replay_button)
 	replay_button.pressed.connect(func(): replay_requested.emit())
 	menu_button.pressed.connect(func(): menu_requested.emit())
 	add_friend_button.pressed.connect(func(): add_friend_requested.emit())
+	view_replay_button.pressed.connect(_on_view_replay_pressed)
+	_replay_view = MatchReplayView.new()
+	add_child(_replay_view)
 	SettingsManager.language_changed.connect(func(_l): _retranslate())
+
+# Appelé par Battle._show_game_over : le journal de combat de la partie qui
+# vient de se terminer est-il disponible (voir SettingsManager.last_match_log,
+# en mémoire seulement — jamais persisté sur disque) ?
+func set_replay_available(available: bool) -> void:
+	view_replay_button.visible = available
+
+func _on_view_replay_pressed() -> void:
+	_replay_view.show_log(SettingsManager.last_match_log)
 
 # Affiche l'écran pour le résultat donné. En réseau, rejouer n'a pas de sens
 # (relancer la scène repartirait en solo contre l'IA, et en déconnexion le pair
@@ -181,6 +197,7 @@ func _retranslate() -> void:
 	replay_button.text = SettingsManager.t("battle.gameover.replay")
 	menu_button.text   = SettingsManager.t("battle.gameover.menu")
 	add_friend_button.text = SettingsManager.t("battle.gameover.add_friend")
+	view_replay_button.text = SettingsManager.t("battle.gameover.view_replay")
 	if _reward_amount > 0:
 		reward_label.text = SettingsManager.t("battle.gameover.reward") % _reward_amount
 	duration_key.text    = SettingsManager.t("battle.gameover.stats.duration")

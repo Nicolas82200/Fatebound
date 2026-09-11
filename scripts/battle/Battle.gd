@@ -787,11 +787,13 @@ func _show_game_over(result: String) -> void:
 			var opponent_name := network_manager.remote_display_name()
 			if opponent_name != "":
 				SettingsManager.record_recent_opponent(opponent_name)
+	SettingsManager.last_match_log = combat_log.entries.duplicate()
 	if result == "victory":
 		AchievementManager.on_victory(self)
 	elif result == "defeat":
 		AchievementManager.on_defeat()
 	game_over_screen.show_result(result, network_manager == null, network_manager != null)
+	game_over_screen.set_replay_available(not SettingsManager.last_match_log.is_empty())
 	if result == "victory" or result == "defeat":
 		game_over_screen.show_stats({
 			"duration_sec": (Time.get_ticks_msec() - match_start_msec) / 1000,
