@@ -80,6 +80,12 @@ var referral_prompt_seen: bool = false
 # pas de synchronisation backend, contrairement à la collection/monnaie
 # (voir CollectionManager/CurrencyManager). Compte les matchs solo comme
 # réseau, tutoriel exclu (voir Battle._show_game_over).
+# Journal de combat (voir CombatLogSystem.entries) de la toute dernière
+# partie jouée — mémoire uniquement, jamais persisté sur disque (référence
+# des Texture2D des cartes, contrairement à match_history/account_xp ci-
+# dessous). Alimente le bouton "Voir le replay" de GameOverScreen ; vide dès
+# le lancement d'une nouvelle partie ou la fermeture du jeu.
+var last_match_log: Array = []
 var match_wins: int = 0
 var match_losses: int = 0
 # Détail des dernières parties (voir record_match_history_entry, appelé par
@@ -94,12 +100,16 @@ const MATCH_HISTORY_MAX_ENTRIES := 20
 # cassée par toute défaite ou toute victoire où le PV plancher est franchi.
 var high_hp_win_streak: int = 0
 # Niveau de compte — progression purement locale (même statut que match_wins
-# ci-dessus, aucune notion de niveau côté backend). Sert ici de condition de
-# déblocage pour les cosmétiques de dos de carte (voir CosmeticsManager).
+# ci-dessus, aucune notion de niveau côté backend). Sert de condition de
+# déblocage pour les titres/cadres de profil (voir ProfileCosmetics) et pour
+# les cosmétiques de dos de carte (voir CosmeticsManager).
 var account_xp: int = 0
 const ACCOUNT_XP_PER_LEVEL := 1000
 const ACCOUNT_XP_WIN := 150
 const ACCOUNT_XP_LOSS := 50
+# Index du titre/cadre de profil choisi (voir ProfileCosmetics.TITLES/FRAMES).
+var selected_title: int = 0
+var selected_frame: int = 0
 # Index du dos de carte cosmétique choisi (voir CosmeticsManager.CARD_BACKS).
 var selected_card_back: int = 0
 
@@ -204,6 +214,18 @@ func award_account_xp(amount: int) -> void:
 	if amount <= 0:
 		return
 	account_xp += amount
+	_save()
+
+func set_selected_title(index: int) -> void:
+	if selected_title == index:
+		return
+	selected_title = index
+	_save()
+
+func set_selected_frame(index: int) -> void:
+	if selected_frame == index:
+		return
+	selected_frame = index
 	_save()
 
 func set_selected_card_back(index: int) -> void:
@@ -463,6 +485,8 @@ func _save() -> void:
 	cfg.set_value("stats", "match_losses", match_losses)
 	cfg.set_value("stats", "match_history", match_history)
 	cfg.set_value("stats", "account_xp", account_xp)
+	cfg.set_value("stats", "selected_title", selected_title)
+	cfg.set_value("stats", "selected_frame", selected_frame)
 	cfg.set_value("stats", "selected_card_back", selected_card_back)
 	cfg.set_value("stats", "high_hp_win_streak", high_hp_win_streak)
 	cfg.set_value("display", "text_scale", text_scale)
@@ -502,6 +526,8 @@ func _load() -> void:
 	var saved_history = cfg.get_value("stats", "match_history", [])
 	match_history = saved_history if saved_history is Array else []
 	account_xp = cfg.get_value("stats", "account_xp", 0) as int
+	selected_title = cfg.get_value("stats", "selected_title", 0) as int
+	selected_frame = cfg.get_value("stats", "selected_frame", 0) as int
 	selected_card_back = cfg.get_value("stats", "selected_card_back", 0) as int
 	high_hp_win_streak = cfg.get_value("stats", "high_hp_win_streak", 0) as int
 	text_scale = cfg.get_value("display", "text_scale", DEFAULT_TEXT_SCALE) as float
