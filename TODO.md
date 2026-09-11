@@ -54,6 +54,10 @@ Ajout de la 5e race (Artefact, `resources/cards/artifact/`, 75 cartes dont 3 jet
 
 **Reste ouvert, hors de portée de cette passe** : le même défaut (CSV pas régénéré après un changement de wording) peut exister sur d'autres races touchées par `0439-wording-standardization` (Mort-Vivant/Humain/Démon/Abomination) — pas audité ici, seul l'Artefact a été vérifié. À comparer systématiquement `description`/`flavour_text` de `resources/cards/` face à `translations/game.csv` dans une passe dédiée si ça n'a pas déjà été fait ailleurs.
 
+## P11 — Backend : aucune preuve serveur qu'un match a réellement eu lieu
+
+Audit de sécurité (2026-09-06) : `POST /api/rewards/solo-match` et `POST /api/ranked/matches/report` (`wyrdane-backend`) acceptent un résultat de match auto-déclaré par le client (`result`, `cardsPlayedByRace`, `deckRaces`) sans aucun lien vérifiable à une vraie session Steam P2P. Un script (ou deux comptes colludés côté ranked, via un double-report concordant) peut fabriquer des rapports fictifs pour farmer quêtes/MMR/or. Mitigation déjà en place (branche `0051-security-hardening` du backend) : rate-limiting par utilisateur sur ces deux routes + bornage des valeurs déclarées (races inconnues et compteurs absurdes rejetés) — réduit l'ampleur d'un abus mais ne le rend pas impossible. Fix complet nécessiterait de lier `clientMatchId` à un jeton de session signé, émis côté serveur au moment du matchmaking/handshake (voir `docs/backend-contracts/ranked-matchmaking-and-retention.md`), à durée de vie courte et à usage unique par paire de joueurs.
+
 ## Non-problèmes vérifiés pendant cette revue
 
 - Aucun marqueur `TODO`/`FIXME`/`HACK`/`XXX` dans `scripts/` ou `scenes/` — rien d'oublié en l'état signalé dans le code.

@@ -77,6 +77,7 @@ Ordre exact d’un combat (géré principalement par `CombatSystem`) :
 ### ⚔️ Autres mécaniques d'effet
 
 - **Exil à la mort** (`CardData.exile_on_death`) : le serviteur ne rejoint pas le cimetière (Possédé Hurlant). Filtré dans `DeathSystem._send_to_graveyards`.
+- **Jetons et cimetière** : un serviteur jeton (`CardData.is_token`) ne rejoint jamais le cimetière à sa mort — comme pour l'exil, filtré dans `DeathSystem._send_to_graveyards`. Le texte de la carte l'indique explicitement (« Ne rejoint pas le cimetière à sa mort. ») pour que le joueur le sache sans avoir à le déduire.
 - **Coût de sacrifice ciblé** (effet `SacrificeAlly` + `requires_target`) : le joueur choisit l'allié sacrifié avant de résoudre le reste de l'effet (Don de Chair) ; sans cible (IA), les plus faibles sont sacrifiés automatiquement. `CardSystem.conditions_met` interdit le lancer sans assez d'alliés.
 - **Rituels de Sacrifice** (`CardData.sacrifice_count` / `sacrifice_max_hp` + `SacrificeSystem`) : un rituel à trigger `OnSacrifice` posé en jeu s'active en cliquant dessus (surbrillance dorée quand activable), puis en choisissant la ou les victimes alliées ; les victimes meurent (marquées `sacrificed`, pas de REVENANT), l'effet du rituel s'exécute et une charge est consommée (`TriggerSystem.activate_sacrifice_ritual`). Synchronisé en réseau via la commande `ACTIVATE_RITUAL`. Cartes : Pacte Sanglant, Cercle de Sacrifice, Rituel de la Fosse Sans Fond.
 - **Réduction de coût en mana** (`CostSystem`) : le coût effectif d'une carte est calculé à la volée (`Battle.get_card_cost`), jamais en modifiant `CardData.cost`. Deux sources : remises temporaires par carte "ce tour" (effet `DrawCardDiscount`, Doigt Décharné) et auras d'enchantement — `AuraSpellCostReduction` (Sanctuaire Nécrotique : sorts alliés −1, min 1) et `AuraFirstOfRaceCostReduction` (Murmure Funeste : premier Mort-Vivant du tour −1, min 1). Le coût réduit s'affiche en vert dans la main.
@@ -113,7 +114,7 @@ Mots-clés exclusifs (`KeywordAbomination.gd`, définitions complètes dans `CAR
 |---|---|---|
 | `MUTATION` | Mute (Table de Mutation) chaque fois que ce serviteur survit à une blessure. Permanent, cumulable. | `EffectManager.notify_damaged` → `EffectManager.roll_mutation` |
 | `FUSION` | Activation volontaire : sacrifie un allié adjacent, absorbe ses stats restantes ET un de ses mots-clés au choix. | `FusionSystem.gd` — bouton dédié sur le serviteur, ciblage de la victime puis popup de choix du mot-clé ; synchronisé réseau (`NetCommand.ACTIVATE_FUSION`) |
-| `VIRULENT` | Dernier Souffle : le serviteur allié adjacent déclenche immédiatement une mutation. | `DeathSystem._collect_virulent_adjacent` (capturé avant retrait du plateau) + `roll_mutation` |
+| `VIRULENT` | Quand ce serviteur meurt, le serviteur allié adjacent déclenche immédiatement une mutation. | `DeathSystem._collect_virulent_adjacent` (capturé avant retrait du plateau) + `roll_mutation` |
 | `CHAIR ADAPTATIVE` | Arrivée : copie un mot-clé présent sur un serviteur EN JEU (allié ou ennemi), de façon permanente. | `BoardSystem._apply_chair_adaptative` (choix déterministe, premier mot-clé trouvé, alliés d'abord) |
 | `ASSIMILATION` | Dévoration : gagne +1/+1 jusqu'au début du prochain tour (une fois par vague de morts, pas par mort individuelle). | `DeathSystem._trigger_devoration` |
 | `INSTABLE` | Ne peut pas être ciblé par des effets de soin, alliés ou ennemis. | `Minion.is_heal_immune` (lu par `Minion.heal`) |
@@ -213,7 +214,7 @@ Triggers disponibles (`TriggerType.gd`) :
 *   `ONPLAY` (Arrivée) / `DEATHRATTLE` (Dernier Souffle) / `CHARGE` (Assaut)
 *   `OnDamaged` (Blessure) / `OnAttack` (Attaque — fusionne l'ancien `OnRally`/Ralliement) / `OnExecution` (Exécution)
 *   `OnAwaken` (Éveil) / `OnDecline` (Déclin) — début / fin de tour du propriétaire (plus de `OnTurnStart`/`OnTurnEnd` symétriques, retirés)
-*   `OnGrief` + `OnMourning` (Deuil) / `OnCarnage` (Carnage)
+*   `OnGrief` (Deuil) / `OnCarnage` (Carnage)
 *   `OnSpell` (Sortilège) / `OnSacrifice` (Sacrifice) / `OnDeathRage` (Mort-rage — une fois, sous 50% HP max)
 *   `OnSummon` (Renfort) / `OnAura` (Présence) / `OnResonance` (Résonance)
 *   `OnSelfDamage` (Sacrifice du sang — le héros du camp perd des HP à cause de ses propres cartes)
@@ -848,7 +849,7 @@ Logique : tous les coûts restent accessibles à tout niveau (jamais 0% une fois
 | Blessure (OnDamaged) | ✅ Oui |
 | Exécution (OnExecution) | ✅ Oui |
 | Attaque (OnAttack) | ✅ Oui |
-| Éveil / Déclin / Deuil / Mourning / Carnage / Sortilège / Renfort / Présence / Résonance | ✅ Oui |
+| Éveil / Déclin / Deuil / Carnage / Sortilège / Renfort / Présence / Résonance | ✅ Oui |
 
 #### Règle NÉCROPHAGE (et effets similaires)
 - Les morts sont traitées **dans l'ordre chronologique** pendant la simulation (comme `DeathSystem` actuel en batch).
