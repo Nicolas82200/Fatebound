@@ -88,6 +88,13 @@ var referral_prompt_seen: bool = false
 var last_match_log: Array = []
 var match_wins: int = 0
 var match_losses: int = 0
+# Détail des dernières parties (voir record_match_history_entry, appelé par
+# Battle._show_game_over), le plus récent en tête. Purement local comme
+# match_wins/match_losses ci-dessus — aucune notion d'historique côté
+# backend. Chaque entrée : {result, opponent_name, opponent_race,
+# duration_sec, timestamp}.
+var match_history: Array = []
+const MATCH_HISTORY_MAX_ENTRIES := 20
 # Série de victoires consécutives sans jamais passer sous 20 PV de héros
 # (succès Steam "Gardien", voir AchievementManager.ACH_GUARDIAN_STREAK) —
 # cassée par toute défaite ou toute victoire où le PV plancher est franchi.
@@ -190,6 +197,12 @@ func record_match_result(won: bool) -> void:
 		match_losses += 1
 	_save()
 	match_stats_changed.emit(match_wins, match_losses)
+
+func record_match_history_entry(entry: Dictionary) -> void:
+	match_history.push_front(entry)
+	if match_history.size() > MATCH_HISTORY_MAX_ENTRIES:
+		match_history.resize(MATCH_HISTORY_MAX_ENTRIES)
+	_save()
 
 func account_level() -> int:
 	return (account_xp / ACCOUNT_XP_PER_LEVEL) + 1
@@ -470,6 +483,7 @@ func _save() -> void:
 	cfg.set_value("display", "quality", quality)
 	cfg.set_value("stats", "match_wins", match_wins)
 	cfg.set_value("stats", "match_losses", match_losses)
+	cfg.set_value("stats", "match_history", match_history)
 	cfg.set_value("stats", "account_xp", account_xp)
 	cfg.set_value("stats", "selected_title", selected_title)
 	cfg.set_value("stats", "selected_frame", selected_frame)
@@ -509,6 +523,8 @@ func _load() -> void:
 		quality = DEFAULT_QUALITY
 	match_wins = cfg.get_value("stats", "match_wins", 0) as int
 	match_losses = cfg.get_value("stats", "match_losses", 0) as int
+	var saved_history = cfg.get_value("stats", "match_history", [])
+	match_history = saved_history if saved_history is Array else []
 	account_xp = cfg.get_value("stats", "account_xp", 0) as int
 	selected_title = cfg.get_value("stats", "selected_title", 0) as int
 	selected_frame = cfg.get_value("stats", "selected_frame", 0) as int

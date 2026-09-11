@@ -70,6 +70,11 @@ func invite_friends() -> void:
 	if transport != null:
 		transport.invite_friends()
 
+# Nom d'affichage du pair distant (voir NetTransport.remote_display_name).
+# Chaîne vide si transport absent ou backend incapable de le fournir.
+func remote_display_name() -> String:
+	return transport.remote_display_name() if transport != null else ""
+
 # ─── Interne ──────────────────────────────────────────────────────────────────
 
 func _setup_transport(backend: TransportFactory.Backend) -> void:
