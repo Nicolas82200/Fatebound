@@ -48,6 +48,11 @@ var match_: ArenaMatch
 var human: ArenaPlayerState
 var bots: Array[ArenaPlayerState] = []
 var bot_driver := ArenaBotDriver.new()
+# Un ArenaBotSeatController par bot (voir ArenaSeatController) : même IA
+# (bot_driver, partagé et sans état propre) mais exposée derrière l'interface
+# de siège générique, prête à cohabiter avec un futur ArenaNetworkSeatController
+# quand certains de ces 7 sièges seront pilotés par de vrais joueurs distants.
+var bot_seats: Array[ArenaSeatController] = []
 var game_over: bool = false
 # Interrogé en duck-typing par BoardMinion.gd (._is_dragging_card(), voir
 # BoardMinion.gd) pour couper sa création de tooltip de survol pendant
@@ -165,8 +170,11 @@ func _start_match() -> void:
 	var pool := ArenaCardPool.new(pool_cards)
 	human = ArenaPlayerState.new("Joueur", false)
 	bots = []
+	bot_seats = []
 	for i in ArenaConstants.PARTICIPANT_COUNT - 1:
-		bots.append(ArenaPlayerState.new("Bot %d" % (i + 1), true))
+		var bot := ArenaPlayerState.new("Bot %d" % (i + 1), true)
+		bots.append(bot)
+		bot_seats.append(ArenaBotSeatController.new(bot, bot_driver))
 	var players: Array[ArenaPlayerState] = [human]
 	players.append_array(bots)
 	match_ = ArenaMatch.new(players, pool)
@@ -694,14 +702,10 @@ func _resolve_combat_phase() -> void:
 	# restait fenêtre où reroll/achat/pose humains passaient encore alors que
 	# la manche est déjà close côté moteur.
 	_start_combat_phase_timer()
-	for bot in bots:
-		if not bot.is_alive():
+	for seat in bot_seats:
+		if not seat.player.is_alive():
 			continue
-		bot_driver.play_shop_phase(bot, match_)
-		bot_driver.play_positioning_phase(bot)
-		# Après la pose, pas avant : les Incantations "tout le plateau" doivent
-		# viser la composition finale du bot, pas un plateau encore incomplet.
-		await bot_driver.cast_spells_phase(bot, match_)
+		await seat.take_shop_turn(match_)
 	match_.end_shop_phase()
 
 	# Seul l'appariement du joueur humain (jamais les combats bots-contre-bots,

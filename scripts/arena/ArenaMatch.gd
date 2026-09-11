@@ -28,6 +28,12 @@ var elimination_order: Array[ArenaPlayerState] = []
 func _init(_players: Array[ArenaPlayerState], _pool: ArenaCardPool) -> void:
 	players = _players
 	pool = _pool
+	# Assigne un seat_id stable par index si aucun n'a été fourni à l'avance
+	# (voir ArenaPlayerState.seat_id) — c'est cette valeur qu'ArenaPairing
+	# utilise pour ses clés d'appariement plutôt que get_instance_id().
+	for i in players.size():
+		if players[i].seat_id < 0:
+			players[i].seat_id = i
 
 func alive_players() -> Array[ArenaPlayerState]:
 	return players.filter(func(p: ArenaPlayerState): return p.is_alive())

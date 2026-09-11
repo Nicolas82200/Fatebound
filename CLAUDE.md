@@ -46,7 +46,7 @@ scenes/
 
 scripts/
 ├── EffectManager/   # Moteur d'exécution des effets de cartes
-├── arena/           # Mode Arena/Battle Royale (prototype solo local) : ArenaMatch (orchestrateur), SimulatedBattle (combat headless réutilisant CombatSystem/DeathSystem 1v1), ArenaCardPool, ArenaMergeSystem, ArenaPairing, GhostBoard, ArenaBotDriver...
+├── arena/           # Mode Arena/Battle Royale (prototype solo local) : ArenaMatch (orchestrateur), SimulatedBattle (combat headless réutilisant CombatSystem/DeathSystem 1v1), ArenaCardPool, ArenaMergeSystem, ArenaPairing, GhostBoard, ArenaBotDriver, ArenaSeatController (abstraction "qui pilote ce siège", implémentée par ArenaBotSeatController — base pour un futur ArenaNetworkSeatController réseau)...
 ├── audio/           # AudioManager (autoload)
 ├── battle/          # Battle.gd — orchestrateur central de la bataille
 ├── card/            # CardData, Card (UI), CardEffect, styles
