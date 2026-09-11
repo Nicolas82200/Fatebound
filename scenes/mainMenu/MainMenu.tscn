@@ -1191,6 +1191,63 @@ autowrap_mode = 3
 [node name="DeckSelectSep" type="HSeparator" parent="InfoPanel/InfoMargin/ViewsRoot/DeckSelectView" unique_id=1472541]
 layout_mode = 2
 
+[node name="MatchTypeRow" type="VBoxContainer" parent="InfoPanel/InfoMargin/ViewsRoot/DeckSelectView" unique_id=900000120]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="MatchTypeLabel" type="Label" parent="InfoPanel/InfoMargin/ViewsRoot/DeckSelectView/MatchTypeRow" unique_id=900000121]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.91, 0.835, 0.639, 0.75)
+theme_override_font_sizes/font_size = 14
+text = "Type de partie"
+
+[node name="MatchTypeButtonsRow" type="HBoxContainer" parent="InfoPanel/InfoMargin/ViewsRoot/DeckSelectView/MatchTypeRow" unique_id=900000122]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="NormalMatchButton" type="Button" parent="InfoPanel/InfoMargin/ViewsRoot/DeckSelectView/MatchTypeRow/MatchTypeButtonsRow" unique_id=900000123]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+theme_override_colors/font_color = Color(0.078, 0.055, 0.02, 1)
+theme_override_colors/font_pressed_color = Color(0.078, 0.055, 0.02, 1)
+theme_override_colors/font_hover_color = Color(0.05, 0.035, 0.012, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxFlat_play_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_play_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_play_hover")
+text = "Normal"
+
+[node name="RankedMatchButton" type="Button" parent="InfoPanel/InfoMargin/ViewsRoot/DeckSelectView/MatchTypeRow/MatchTypeButtonsRow" unique_id=900000124]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+theme_override_colors/font_color = Color(0.078, 0.055, 0.02, 1)
+theme_override_colors/font_pressed_color = Color(0.078, 0.055, 0.02, 1)
+theme_override_colors/font_hover_color = Color(0.05, 0.035, 0.012, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxFlat_play_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_play_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_play_hover")
+text = "Classé"
+
+[node name="InviteMatchButton" type="Button" parent="InfoPanel/InfoMargin/ViewsRoot/DeckSelectView/MatchTypeRow/MatchTypeButtonsRow" unique_id=900000125]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+theme_override_colors/font_color = Color(0.078, 0.055, 0.02, 1)
+theme_override_colors/font_pressed_color = Color(0.078, 0.055, 0.02, 1)
+theme_override_colors/font_hover_color = Color(0.05, 0.035, 0.012, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxFlat_play_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_play_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_play_hover")
+text = "Contre un ami"
+
 [node name="PlayDeckScroll" type="ScrollContainer" parent="InfoPanel/InfoMargin/ViewsRoot/DeckSelectView" unique_id=1223869849]
 layout_mode = 2
 size_flags_vertical = 3

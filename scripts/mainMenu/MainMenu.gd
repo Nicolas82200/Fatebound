@@ -57,6 +57,11 @@ const DECK_COMP_PREVIEW_SCALE := DECK_COMP_PREVIEW_SIZE / CARD_BASE_SIZE
 @onready var deck_select_title_label: Label = $InfoPanel/InfoMargin/ViewsRoot/DeckSelectView/DeckSelectHeader/DeckSelectTitleLabel
 @onready var play_decks_container: VBoxContainer = $InfoPanel/InfoMargin/ViewsRoot/DeckSelectView/PlayDeckScroll/PlayDecksContainer
 @onready var launch_button: Button = $InfoPanel/InfoMargin/ViewsRoot/DeckSelectView/LaunchButton
+@onready var match_type_row: VBoxContainer = $InfoPanel/InfoMargin/ViewsRoot/DeckSelectView/MatchTypeRow
+@onready var match_type_label: Label = $InfoPanel/InfoMargin/ViewsRoot/DeckSelectView/MatchTypeRow/MatchTypeLabel
+@onready var normal_match_button: Button = $InfoPanel/InfoMargin/ViewsRoot/DeckSelectView/MatchTypeRow/MatchTypeButtonsRow/NormalMatchButton
+@onready var ranked_match_button: Button = $InfoPanel/InfoMargin/ViewsRoot/DeckSelectView/MatchTypeRow/MatchTypeButtonsRow/RankedMatchButton
+@onready var invite_match_button: Button = $InfoPanel/InfoMargin/ViewsRoot/DeckSelectView/MatchTypeRow/MatchTypeButtonsRow/InviteMatchButton
 @onready var custom_difficulty_row: HBoxContainer = $InfoPanel/InfoMargin/ViewsRoot/DeckSelectView/CustomDifficultyRow
 @onready var custom_difficulty_label: Label = $InfoPanel/InfoMargin/ViewsRoot/DeckSelectView/CustomDifficultyRow/CustomDifficultyLabel
 @onready var custom_difficulty_option: OptionButton = %CustomDifficultyOption
@@ -217,6 +222,9 @@ func _ready() -> void:
 	mode_back_button.pressed.connect(_on_mode_back_pressed)
 	play_back_button.pressed.connect(_on_play_back_pressed)
 	launch_button.pressed.connect(_on_launch_pressed)
+	normal_match_button.pressed.connect(_on_match_normal_pressed)
+	ranked_match_button.pressed.connect(_on_match_ranked_pressed)
+	invite_match_button.pressed.connect(_on_match_invite_pressed)
 	edit_deck_button.pressed.connect(DeckCompositionPanel.edit_deck.bind(self))
 	_populate_custom_difficulty_option()
 
@@ -633,10 +641,20 @@ func _on_arena_mode_selected() -> void:
 func _show_deck_select() -> void:
 	_play_selected_deck_index = -1
 	launch_button.disabled = true
+	normal_match_button.disabled = true
+	ranked_match_button.disabled = true
+	invite_match_button.disabled = true
 	_refresh_play_deck_list()
 	# "Partie personnalisée" (choix ponctuel de la difficulté IA) n'a de sens
 	# qu'en solo — en multi l'adversaire est un vrai joueur (voir CustomMatchContext).
-	custom_difficulty_row.visible = _play_mode == PlayMode.SOLO
+	# Le multi, lui, remplace le bouton générique "Lancer" par les cartes de
+	# type de partie (Normal/Classé/Ami, voir _on_match_*_pressed) : chacune
+	# lance directement la recherche avec le deck sélectionné ci-dessous, sans
+	# écran/popup intermédiaire à choisir plus tard.
+	var is_solo := _play_mode == PlayMode.SOLO
+	custom_difficulty_row.visible = is_solo
+	launch_button.visible = is_solo
+	match_type_row.visible = not is_solo
 	_show_info_view(InfoView.DECK_SELECT)
 
 func _populate_custom_difficulty_option() -> void:
@@ -769,28 +787,47 @@ func _make_play_deck_row(deck: DeckData, index: int) -> Control:
 func _on_play_deck_selected(index: int) -> void:
 	_play_selected_deck_index = index
 	launch_button.disabled = false
+	normal_match_button.disabled = false
+	ranked_match_button.disabled = false
+	invite_match_button.disabled = false
 	_refresh_play_deck_list()
 
+# Solo uniquement : le multi lance directement depuis les cartes de type de
+# partie (voir _on_match_*_pressed), pas de bouton générique "Lancer".
 func _on_launch_pressed() -> void:
+	if _play_mode != PlayMode.SOLO or _play_selected_deck_index < 0:
+		return
+	DeckManager.set_active_deck(_play_selected_deck_index)
+	TutorialContext.active = false
+	# "Partie personnalisée" : surcharge ponctuelle de la difficulté IA
+	# (voir CustomMatchContext), sans toucher au réglage global persistant.
+	var chosen_index: int = custom_difficulty_option.selected
+	if chosen_index >= 0 and chosen_index < SettingsManager.AI_DIFFICULTIES.size():
+		CustomMatchContext.ai_difficulty_override = SettingsManager.AI_DIFFICULTIES[chosen_index]
+	SceneTransition.change_scene(BATTLE_SCENE)
+
+# Multi uniquement : chaque carte de type de partie lance directement la
+# recherche avec le deck sélectionné au-dessus — pas de popup intermédiaire
+# (voir MatchmakingOverlay.start_normal/start_ranked/start_invite). Contrairement
+# au solo, ne quitte pas MainMenu : le bandeau de recherche (autoload
+# persistant) prend le relais pendant que le joueur continue de naviguer où il
+# veut (deck builder, boutique...) jusqu'à ce qu'un adversaire soit trouvé.
+func _start_multiplayer_search(start: Callable) -> void:
 	if _play_selected_deck_index < 0:
 		return
 	DeckManager.set_active_deck(_play_selected_deck_index)
-	if _play_mode == PlayMode.SOLO:
-		TutorialContext.active = false
-		# "Partie personnalisée" : surcharge ponctuelle de la difficulté IA
-		# (voir CustomMatchContext), sans toucher au réglage global persistant.
-		var chosen_index: int = custom_difficulty_option.selected
-		if chosen_index >= 0 and chosen_index < SettingsManager.AI_DIFFICULTIES.size():
-			CustomMatchContext.ai_difficulty_override = SettingsManager.AI_DIFFICULTIES[chosen_index]
-		SceneTransition.change_scene(BATTLE_SCENE)
-	else:
-		# Contrairement au solo, ne quitte pas MainMenu : le choix du mode
-		# (Normal/Classé/Ami) s'affiche en popup par-dessus, puis le bandeau de
-		# recherche (MatchmakingOverlay, autoload persistant) prend le relais
-		# pendant que le joueur continue de naviguer où il veut (deck builder,
-		# boutique...) jusqu'à ce qu'un adversaire soit trouvé.
-		AudioManager.play(AudioManager.OPEN_MENU)
-		MatchmakingOverlay.open_mode_picker()
+	AudioManager.play(AudioManager.OPEN_MENU)
+	start.call()
+	_show_info_view(InfoView.NEWS)
+
+func _on_match_normal_pressed() -> void:
+	_start_multiplayer_search(MatchmakingOverlay.start_normal)
+
+func _on_match_ranked_pressed() -> void:
+	_start_multiplayer_search(MatchmakingOverlay.start_ranked)
+
+func _on_match_invite_pressed() -> void:
+	_start_multiplayer_search(MatchmakingOverlay.start_invite)
 
 func _on_discord_pressed() -> void:
 	OS.shell_open(DISCORD_URL)
@@ -848,6 +885,10 @@ func _retranslate() -> void:
 	play_back_button.text = SettingsManager.t("ui.back")
 	deck_select_title_label.text = SettingsManager.t("MENU_PLAY_CHOOSE_DECK")
 	launch_button.text = SettingsManager.t("MENU_PLAY_LAUNCH")
+	match_type_label.text = SettingsManager.t("MENU_MATCH_TYPE_LABEL")
+	normal_match_button.text = SettingsManager.t("NET_MODE_NORMAL")
+	ranked_match_button.text = SettingsManager.t("NET_STEAM_RANKED")
+	invite_match_button.text = SettingsManager.t("NET_MODE_FRIEND")
 	custom_difficulty_label.text = SettingsManager.t("MENU_CUSTOM_DIFFICULTY")
 	_populate_custom_difficulty_option()
 	edit_deck_button.text = SettingsManager.t("MENU_EDIT_DECK_LINK")
