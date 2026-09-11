@@ -57,6 +57,18 @@ const DECK_COMP_PREVIEW_SCALE := DECK_COMP_PREVIEW_SIZE / CARD_BASE_SIZE
 @onready var deck_select_title_label: Label = $InfoPanel/InfoMargin/ViewsRoot/DeckSelectView/DeckSelectHeader/DeckSelectTitleLabel
 @onready var play_decks_container: VBoxContainer = $InfoPanel/InfoMargin/ViewsRoot/DeckSelectView/PlayDeckScroll/PlayDecksContainer
 @onready var launch_button: Button = $InfoPanel/InfoMargin/ViewsRoot/DeckSelectView/LaunchButton
+@onready var custom_difficulty_row: HBoxContainer = $InfoPanel/InfoMargin/ViewsRoot/DeckSelectView/CustomDifficultyRow
+@onready var custom_difficulty_label: Label = $InfoPanel/InfoMargin/ViewsRoot/DeckSelectView/CustomDifficultyRow/CustomDifficultyLabel
+@onready var custom_difficulty_option: OptionButton = %CustomDifficultyOption
+
+# Réutilise les mêmes clés de traduction que GraphismSettingsMenu.DIFFICULTY_LABEL_KEYS
+# (réglage global) — ici pour une surcharge ponctuelle "Partie personnalisée",
+# voir CustomMatchContext.
+const CUSTOM_DIFFICULTY_LABEL_KEYS := {
+	"easy":   "difficulty.easy",
+	"normal": "difficulty.normal",
+	"hard":   "difficulty.hard",
+}
 
 @onready var steam_profile:   Control = $NavPanel/NavMargin/NavStack/MainNavView/PlayerStatusPanel/PlayerMargin/PlayerVBox/SteamProfile
 @onready var steam_avatar:    TextureRect = $NavPanel/NavMargin/NavStack/MainNavView/PlayerStatusPanel/PlayerMargin/PlayerVBox/SteamProfile/Avatar
@@ -192,6 +204,7 @@ func _ready() -> void:
 	play_back_button.pressed.connect(_on_play_back_pressed)
 	launch_button.pressed.connect(_on_launch_pressed)
 	edit_deck_button.pressed.connect(DeckCompositionPanel.edit_deck.bind(self))
+	_populate_custom_difficulty_option()
 
 	legal_button.pressed.connect(_on_legal_pressed)
 	close_legal.set_meta("no_click_sound", true)
@@ -577,7 +590,20 @@ func _show_deck_select() -> void:
 	_play_selected_deck_index = -1
 	launch_button.disabled = true
 	_refresh_play_deck_list()
+	# "Partie personnalisée" (choix ponctuel de la difficulté IA) n'a de sens
+	# qu'en solo — en multi l'adversaire est un vrai joueur (voir CustomMatchContext).
+	custom_difficulty_row.visible = _play_mode == PlayMode.SOLO
 	_show_info_view(InfoView.DECK_SELECT)
+
+func _populate_custom_difficulty_option() -> void:
+	custom_difficulty_option.clear()
+	for i in SettingsManager.AI_DIFFICULTIES.size():
+		var level: String = SettingsManager.AI_DIFFICULTIES[i]
+		custom_difficulty_option.add_item(SettingsManager.t(CUSTOM_DIFFICULTY_LABEL_KEYS.get(level, level)))
+		if level == SettingsManager.ai_difficulty:
+			custom_difficulty_option.selected = i
+	if custom_difficulty_option.selected < 0:
+		custom_difficulty_option.selected = 0
 	# Même besoin qu'en DECKS_MANAGE (voir _show_info_view) : re-sync à chaque
 	# ouverture de l'écran de choix du deck pour lancer une partie.
 	DeckManager.sync_from_backend()
@@ -707,6 +733,11 @@ func _on_launch_pressed() -> void:
 	DeckManager.set_active_deck(_play_selected_deck_index)
 	if _play_mode == PlayMode.SOLO:
 		TutorialContext.active = false
+		# "Partie personnalisée" : surcharge ponctuelle de la difficulté IA
+		# (voir CustomMatchContext), sans toucher au réglage global persistant.
+		var chosen_index: int = custom_difficulty_option.selected
+		if chosen_index >= 0 and chosen_index < SettingsManager.AI_DIFFICULTIES.size():
+			CustomMatchContext.ai_difficulty_override = SettingsManager.AI_DIFFICULTIES[chosen_index]
 		SceneTransition.change_scene(BATTLE_SCENE)
 	else:
 		AudioManager.play(AudioManager.OPEN_MENU)
@@ -763,6 +794,8 @@ func _retranslate() -> void:
 	play_back_button.text = SettingsManager.t("ui.back")
 	deck_select_title_label.text = SettingsManager.t("MENU_PLAY_CHOOSE_DECK")
 	launch_button.text = SettingsManager.t("MENU_PLAY_LAUNCH")
+	custom_difficulty_label.text = SettingsManager.t("MENU_CUSTOM_DIFFICULTY")
+	_populate_custom_difficulty_option()
 	edit_deck_button.text = SettingsManager.t("MENU_EDIT_DECK_LINK")
 	deck_comp_preview_hint.text = SettingsManager.t("MENU_DECK_COMPOSITION_EMPTY")
 	profile_title_label.text = SettingsManager.t("PROFILE_TITLE")
