@@ -68,6 +68,20 @@ func test_arena_match_preserves_a_seat_id_assigned_in_advance() -> void:
 	var pool := ArenaCardPool.new([])
 	var m := ArenaMatch.new(players, pool)
 	assert_eq(m.players[0].seat_id, 42, "un seat_id déjà assigné (ex. par une future couche réseau) ne doit pas être écrasé")
+
+func test_find_by_seat_returns_the_matching_player() -> void:
+	var players: Array[ArenaPlayerState] = []
+	players.append_array(_make_players(3))
+	var pool := ArenaCardPool.new([])
+	var m := ArenaMatch.new(players, pool)
+	assert_eq(m.find_by_seat(1), m.players[1])
+
+func test_find_by_seat_returns_null_for_an_unknown_seat() -> void:
+	var players: Array[ArenaPlayerState] = []
+	players.append_array(_make_players(2))
+	var pool := ArenaCardPool.new([])
+	var m := ArenaMatch.new(players, pool)
+	assert_null(m.find_by_seat(99))
 	assert_eq(m.players[1].seat_id, 1)
 
 func test_pairing_cooldown_table_matches_the_8_player_design() -> void:
