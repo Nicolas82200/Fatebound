@@ -58,7 +58,17 @@ func run_turn_end_triggers(is_local_turn: bool = true) -> void:
 	var turn_hero: Hero = battle.player_hero if is_local_turn else battle.enemy_hero
 	turn_hero.heal_block_turns = max(turn_hero.heal_block_turns - 1, 0)
 
-	await _apply_infection_damage()
+	# Un seul tick d'Infection par round : cette fonction est appelée DEUX fois
+	# par round complet (fin du tour local ici, puis fin du tour adverse via
+	# AISystem.take_turn()/NetworkOpponent.take_turn() avec is_local_turn=false),
+	# mais _apply_infection_damage() n'est pas filtrée par camp — elle inflige
+	# les dégâts à TOUS les serviteurs infectés des deux camps. L'appeler aux
+	# deux occasions doublait donc les dégâts d'Infection par round (5 marques
+	# = 10 HP/tour au lieu de 5). Ne la déclencher qu'à la fin du tour local,
+	# seule occurrence déjà existante en tutoriel (TutorialOpponent ne rappelle
+	# jamais cette fonction), pour un tick unique et cohérent dans tous les modes.
+	if is_local_turn:
+		await _apply_infection_damage()
 
 func _begin_player_turn() -> void:
 	# Capture les ids des serviteurs créés par les déclencheurs de début de tour.
@@ -87,6 +97,10 @@ func run_turn_start_triggers(is_local_turn: bool) -> void:
 	battle.trigger_system.reset_once_per_turn(is_local_turn)
 	battle.resource_played_this_turn[is_local_turn] = false
 	battle.undead_ally_deaths_this_turn[is_local_turn] = 0
+	if is_local_turn:
+		# Succès Steam "Exécuteur" (voir AchievementManager) : compteur remis à
+		# zéro à chaque nouveau tour du joueur local.
+		battle.player_kills_this_turn = 0
 	# Réarmé par Ordre de Tenir (OnAwaken) si le rituel est encore actif.
 	battle.front_line_protected[is_local_turn] = false
 	var turn_minions: Array = battle.player_minions if is_local_turn else battle.enemy_minions
@@ -123,6 +137,11 @@ func _apply_infection_damage() -> void:
 			var dealt: int = minion.take_damage(minion.infection_stacks)
 			if dealt > 0:
 				battle.combat_log.infection_tick(minion, dealt)
+				# Succès Steam "Peste noire" (voir AchievementManager) : seuls les
+				# dégâts d'Infection subis par un serviteur ennemi comptent (les
+				# marques ont forcément été posées par des cartes du joueur local).
+				if not minion.owner_is_player:
+					battle.player_infection_damage_dealt += dealt
 				var visual: BoardMinion = battle.board_visual_system.get_visual(minion)
 				if visual:
 					battle.animation_system.play_infection_tick(visual, dealt)
@@ -236,8 +255,9 @@ func run_mulligan() -> void:
 	battle.update_end_turn_hint()
 
 func _on_mulligan_card_clicked(index: int, _card_data: CardData) -> void:
-	# Un slot déjà échangé reste réchangeable (le joueur peut retenter sa chance
-	# sur la même carte) : seul le total de MULLIGAN_MAX_SWAPS échanges est borné.
+	# N'importe quelle carte en main peut être rééchangée, y compris une carte
+	# déjà remplacée pendant ce mulligan (le joueur peut retenter sa chance sur
+	# la même carte) : seul le total de MULLIGAN_MAX_SWAPS échanges est borné.
 	if battle._mulligan_swap_count >= battle.MULLIGAN_MAX_SWAPS:
 		return
 	if battle.tutorial_active and not TutorialDeck.is_swappable_during_tutorial(_card_data):

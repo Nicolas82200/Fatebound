@@ -35,7 +35,8 @@ var difficulty: String = "normal"
 # race_mana / race_max_mana sont hérités d'OpponentDriver (partagés avec le mode réseau).
 
 func setup() -> void:
-	difficulty = SettingsManager.ai_difficulty
+	difficulty = CustomMatchContext.ai_difficulty_override if CustomMatchContext.ai_difficulty_override != "" else SettingsManager.ai_difficulty
+	CustomMatchContext.clear()
 	_build_deck()
 	deck.shuffle()
 	for i in range(STARTING_HAND):
@@ -477,6 +478,8 @@ func _filter_spell_targets(minions: Array[Minion], effect: CardEffect) -> Array[
 		if effect.target_max_hp >= 0 and m.health > effect.target_max_hp:
 			return false
 		if effect.target_max_atk >= 0 and m.attack > effect.target_max_atk:
+			return false
+		if effect.target_max_cost >= 0 and m.card_data.cost > effect.target_max_cost:
 			return false
 		return true
 	)

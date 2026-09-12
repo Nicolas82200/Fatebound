@@ -11,6 +11,7 @@ var player_minions: Array[Minion] = []
 var enemy_minions: Array[Minion] = []
 
 var hero_system: FakeHeroSystem = FakeHeroSystem.new(self)
+var pact_choice_system: FakePactChoiceSystem = FakePactChoiceSystem.new()
 var temp_effect_system: TempEffectSystem = TempEffectSystem.new()
 var board_visual_system: FakeBoardVisualSystem = FakeBoardVisualSystem.new()
 var card_popup_system: FakeCardPopupSystem = FakeCardPopupSystem.new()
@@ -42,6 +43,8 @@ var net_emitter = null
 var counter_offensive: Dictionary = {true: false, false: false}
 var front_line_protected: Dictionary = {true: false, false: false}
 var undead_ally_deaths_this_turn: Dictionary = {true: 0, false: 0}
+var player_kills_this_turn: int = 0
+var player_infection_damage_dealt: int = 0
 var _fake_tree := FakeSceneTree.new()
 
 # ─── Ajouts pour tester DeckSystem ─────────────────────────────────────────────
@@ -55,6 +58,7 @@ const CARD_BACK = preload("res://assets/card_back/card-back.png")
 
 # ─── Suivi des quêtes de race (voir Battle.gd) ─────────────────────────────────
 var deck_races: Array[String] = []
+var deck_has_legendary: bool = false
 var cards_played_by_race: Dictionary = {}
 
 func track_card_played_for_quests(card_data: CardData) -> void:
@@ -73,6 +77,14 @@ var _player_hero_panel := Control.new()
 var _enemy_hero_panel := Control.new()
 var _player_health_label := Label.new()
 var _enemy_health_label := Label.new()
+var player_graveyard_btn := Control.new()
+var enemy_graveyard_btn := Control.new()
+
+func get_viewport() -> FakeViewport:
+	return FakeViewport.new()
+
+func animate_enemy_card_returned(_origin: Vector2) -> void:
+	pass
 
 # ─── Ajouts pour tester AISystem ───────────────────────────────────────────────
 var deck_system: FakeDeckSystem = FakeDeckSystem.new()
@@ -110,8 +122,8 @@ func race_mana_pool(is_player: bool) -> Dictionary:
 func update_mana_ui() -> void:
 	pass
 
-func summon_minion(card_data: CardData, is_player: bool, row := "Front", insert_index := -1, skip_onplay := false) -> void:
-	await board_system.summon_minion_return(card_data, is_player, row, insert_index, skip_onplay)
+func summon_minion(card_data: CardData, is_player: bool, row := "Front", insert_index := -1, skip_onplay := false) -> Minion:
+	return await board_system.summon_minion_return(card_data, is_player, row, insert_index, skip_onplay)
 
 func _init() -> void:
 	deck_system.battle = self
@@ -226,6 +238,20 @@ class FakeHeroSystem:
 		return dealt
 	func update_ui() -> void:
 		pass
+
+
+class FakePactChoiceSystem:
+	var next_result: bool = false
+	var calls: Array = []
+	# Instantané de l'état passé en argument à l'appel : permet aux tests de
+	# vérifier que l'effet de base s'est déjà exécuté AVANT ce point (ex.
+	# lire hero.health ici doit déjà refléter le heal de base).
+	var on_resolve: Callable = Callable()
+	func resolve_trigger(card_data: CardData, is_player: bool) -> bool:
+		calls.append({"card_data": card_data, "is_player": is_player})
+		if on_resolve.is_valid():
+			on_resolve.call()
+		return next_result
 
 
 class FakeBoardVisualSystem:
@@ -521,6 +547,12 @@ class FakeTimer:
 		call_deferred("_fire")
 	func _fire() -> void:
 		timeout.emit()
+
+
+class FakeViewport:
+	extends RefCounted
+	func get_mouse_position() -> Vector2:
+		return Vector2.ZERO
 
 
 class FakeSceneTree:

@@ -36,6 +36,7 @@ func get_enemy_hero(minion: Minion) -> Hero:
 
 func damage(hero: Hero, amount: int) -> void:
 	hero.take_damage(amount)
+	_track_player_hp_for_achievements(hero)
 	# RANG INFERNAL dépend des HP manquants du héros : recalcul immédiat
 	battle.aura_system.recompute_all()
 	# Une aura peut faire chuter des HP (perte d'un bonus de rangée...) : vérifier
@@ -68,6 +69,7 @@ func self_damage(is_player: bool, amount: int) -> int:
 	if dealt <= 0:
 		return 0
 	hero.take_damage(dealt)
+	_track_player_hp_for_achievements(hero)
 	battle.combat_log.self_damage(is_player, dealt)
 	await _on_self_damage_dealt(is_player)
 	update_ui()
@@ -85,6 +87,9 @@ func _on_self_damage_dealt(is_player: bool) -> void:
 			var visual: BoardMinion = battle.board_visual_system.get_visual(minion)
 			if visual:
 				battle.animation_system.play_sang_noir_buff(visual)
+			if is_player:
+				battle.player_black_blood_triggers_this_match += 1
+				AchievementManager.on_black_blood_trigger(battle.player_black_blood_triggers_this_match)
 	if not _firing_self_damage:
 		_firing_self_damage = true
 		await battle.trigger_system.fire("OnSelfDamage", null, is_player)
@@ -93,14 +98,37 @@ func _on_self_damage_dealt(is_player: bool) -> void:
 	await battle.death_system.process_deaths()
 	battle.board_visual_system.refresh_board()
 
+# Alimente les compteurs de succès Steam "Comeback"/"Gardien" (voir
+# AchievementManager) : plancher de PV atteint et passage sous 5 PV, pour le
+# héros du joueur local uniquement.
+func _track_player_hp_for_achievements(hero: Hero) -> void:
+	if hero != battle.player_hero:
+		return
+	battle.player_min_hp_this_match = min(battle.player_min_hp_this_match, hero.health)
+	if hero.health > 0 and hero.health <= AchievementManager.COMEBACK_HP_THRESHOLD:
+		battle.player_was_low_hp_this_match = true
+
 # Accessibilité : au-dessous de ce ratio de HP max, un symbole "⚠" est ajouté
 # devant le nombre de HP du héros — ne pas dépendre uniquement d'une couleur
 # pour signaler un danger (voir _hp_label_text).
 const LOW_HP_RATIO := 0.3
 
+# Sous ce seuil de PV absolus, le texte du label passe en rouge (en plus du
+# symbole ⚠ au-dessous de LOW_HP_RATIO, qui reste le repère non colorimétrique).
+const CRITICAL_HP_THRESHOLD := 10
+const _CRITICAL_HP_COLOR := Color(0.9, 0.2, 0.2, 1.0)
+
 func update_ui() -> void:
-	battle.get_node("PlayerHeroPanel/HealthLabel").text = _hp_label_text(battle.player_hero)
-	battle.get_node("EnemyHeroPanel/HealthLabel").text  = _hp_label_text(battle.enemy_hero)
+	_apply_hp_label(battle.get_node("PlayerHeroPanel/HealthLabel"), battle.player_hero)
+	_apply_hp_label(battle.get_node("EnemyHeroPanel/HealthLabel"), battle.enemy_hero)
+
+func _apply_hp_label(label: Label, hero: Hero) -> void:
+	label.text = _hp_label_text(hero)
+	var hp: int = maxi(hero.health, 0)
+	if hp > 0 and hp <= CRITICAL_HP_THRESHOLD:
+		label.add_theme_color_override("font_color", _CRITICAL_HP_COLOR)
+	else:
+		label.remove_theme_color_override("font_color")
 
 func _hp_label_text(hero: Hero) -> String:
 	var hp: int = maxi(hero.health, 0)

@@ -108,12 +108,13 @@ func _execute_damage(attacker: Minion, defender: Minion) -> int:
 	if attacker_had_aegis and not attacker.has_keyword(Keyword.Type.AEGIS):
 		battle.animation_system.play_aegis_break(attacker_visual)
 
-	# CHAIR MORTE : immunisé au poison — Venin mortel ne détruit pas la cible
-	if attacker.has_keyword(Keyword.Type.DEADLY_POISON) and not defender.has_undead_keyword(KeywordUndead.Type.CHAIR_MORTE):
+	# VENIN MORTEL n'est pas un effet néfaste racial (CHAIR MORTE/DISCIPLINE ne
+	# le bloquent plus) : détruit sa cible sans exception.
+	if attacker.has_keyword(Keyword.Type.DEADLY_POISON):
 		if not defender.is_dead():
 			battle.animation_system.play_deadly_poison(defender_visual)
 		defender.health = 0
-	if defender.has_keyword(Keyword.Type.DEADLY_POISON) and not attacker.has_undead_keyword(KeywordUndead.Type.CHAIR_MORTE):
+	if defender.has_keyword(Keyword.Type.DEADLY_POISON):
 		if not attacker.is_dead():
 			battle.animation_system.play_deadly_poison(attacker_visual)
 		attacker.health = 0
@@ -131,14 +132,21 @@ func _execute_damage(attacker: Minion, defender: Minion) -> int:
 		defender.apply_corruption(1)
 		battle.animation_system.play_corruption(defender_visual)
 
-	# TERREUR : la cible ne peut pas attaquer lors du prochain tour adverse
-	# (sans effet sur les serviteurs immunisés à la peur)
-	if attacker.has_demon_keyword(KeywordDemon.Type.TERREUR) and not defender.is_dead() and not defender.is_fear_immune():
-		defender.terror_turns = max(defender.terror_turns, 1)
+	# TERREUR : la cible ne peut pas attaquer lors du prochain tour de son
+	# contrôleur (sans effet sur les serviteurs immunisés à la peur)
+	if attacker.has_demon_keyword(KeywordDemon.Type.TERREUR) and dealt_to_defender > 0 and defender.apply_terror():
 		battle.animation_system.play_terror(defender_visual)
 
 	if dealt_to_attacker > 0:
 		await battle.effect_manager.notify_damaged(battle, attacker)
+		# CONTRE-ATTAQUE côté attaquant : s'il survit aux dégâts reçus en
+		# attaquant (ex: le défenseur ripostait déjà), il inflige à nouveau
+		# ses dégâts au défenseur. Symétrique au cas défenseur ci-dessous.
+		if not attacker.is_dead() and not defender.is_dead() and attacker.has_human_keyword(KeywordHuman.Type.CONTRE_ATTAQUE):
+			var counter_atk: int = defender.take_damage(attacker.attack)
+			if counter_atk > 0:
+				battle.animation_system.play_counter_attack(attacker_visual, defender_visual)
+				await battle.effect_manager.notify_damaged(battle, defender)
 	if dealt_to_defender > 0 and not defender.is_dead():
 		await battle.effect_manager.notify_damaged(battle, defender)
 		if defender.has_human_keyword(KeywordHuman.Type.CONTRE_ATTAQUE):
@@ -164,7 +172,7 @@ func _execute_damage(attacker: Minion, defender: Minion) -> int:
 		if attacker.has_keyword(Keyword.Type.RAVAGE) and not defender.card_data.blocks_overkill:
 			var excess: int = a_dmg - defender_health_before
 			if excess > 0:
-				battle.hero_system.damage(battle.hero_system.get_enemy_hero(attacker), excess)
+				await battle.hero_system.damage(battle.hero_system.get_enemy_hero(attacker), excess)
 				var enemy_hero_panel: Control = battle.get_node("EnemyHeroPanel" if attacker.owner_is_player else "PlayerHeroPanel")
 				battle.animation_system.play_ravage_overkill(attacker_visual, enemy_hero_panel)
 		# Contre-Offensive : un Humain qui tue rejoue immédiatement (+1 attaque, le
@@ -200,10 +208,15 @@ func perform_hero_attack(attacker: Minion) -> void:
 	# simplement rien à faire, seuls ceux visant l'attaquant lui-même
 	# (ex: Aura de Décrépitude, via TriggerSource) s'appliquent.
 	await battle.trigger_system.fire("OnResonance", attacker, attacker.owner_is_player, {"target": null})
-	battle.hero_system.damage(battle.hero_system.get_enemy_hero(attacker), attacker.attack)
+	await battle.hero_system.damage(battle.hero_system.get_enemy_hero(attacker), attacker.attack)
 	battle.combat_log.attack_hero(attacker, not attacker.owner_is_player, attacker.attack)
 	if attacker.has_keyword(Keyword.Type.LIFESTEAL) and attacker.attack > 0:
 		battle.hero_system.get_owner_hero(attacker).heal(attacker.attack)
+		# battle.hero_system.damage() ci-dessus a déjà rafraîchi l'affichage des
+		# PV avant ce soin : sans un second update_ui() ici, le label du héros
+		# soigné restait périmé jusqu'au prochain refresh fortuit (typiquement le
+		# tour suivant), donnant l'impression que MOISSON soignait en différé.
+		battle.hero_system.update_ui()
 		if visual:
 			var owner_panel: Control = battle.get_node("PlayerHeroPanel" if attacker.owner_is_player else "EnemyHeroPanel")
 			battle.animation_system.play_lifesteal(visual, owner_panel, attacker.attack)

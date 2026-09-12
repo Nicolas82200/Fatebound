@@ -22,12 +22,17 @@ func handle_card_played(card_data: CardData, row: String, insert_index: int) -> 
 			battle.net_emitter.play_card(card_data, "Resource", -1)
 		if battle.tutorial_manager:
 			await battle.tutorial_manager.notify_card_played(card_data)
+		await battle.check_auto_pass_turn()
 		return
 	if card_data.card_type == "Minion" and not battle.can_play_card_on_row(card_data, row):
 		return
 	if card_data.card_type == "Minion" and not battle.can_summon_to_row(true, row):
 		push_warning("Rangée %s pleine." % row)
 		return
+	# Succès Steam "Sans-recul" (voir AchievementManager) : ce serviteur va bien
+	# être posé en Arrière (les vérifications ci-dessus sont passées).
+	if card_data.card_type == "Minion" and row == battle.ROW_BACK:
+		battle.player_used_back_row_this_match = true
 	if not conditions_met(card_data):
 		push_warning("Conditions non remplies pour jouer %s." % card_data.card_name)
 		battle.hand.set_hand(battle.hand_cards)
@@ -88,6 +93,7 @@ func play_card(card_data: CardData, row := "Front", insert_index := -1) -> void:
 	await _resolve(card_data, row, insert_index)
 	if battle.tutorial_manager:
 		await battle.tutorial_manager.notify_card_played(card_data)
+	await battle.check_auto_pass_turn()
 
 func resolve_with_target(card_data: CardData, row: String, insert_index: int, target) -> void:
 	battle.cost_system.pay(card_data, true)
@@ -174,7 +180,7 @@ func resolve_with_target(card_data: CardData, row: String, insert_index: int, ta
 			battle.vfx_manager.spawn_for_spell(battle, card_data, true, target if target is Minion else null)
 			battle.player_graveyard.add_spell(card_data)
 			for effect in card_data.effects:
-				if target is Minion:
+				if target is Minion or target is Hero:
 					await battle.effect_manager.execute_effect(battle, null, effect, target)
 				elif target is CardData:
 					await battle.effect_manager.execute_enchantment_targeted_effect(battle, null, effect, target)
@@ -184,9 +190,11 @@ func resolve_with_target(card_data: CardData, row: String, insert_index: int, ta
 
 	# Émission réseau : le joueur local a joué cette carte sur une cible.
 	# NOTE: NetCommand ne sait sérialiser qu'un net_id de Minion ; une cible
-	# CardData (enchantement/rituel) n'est donc PAS encore synchronisée au
-	# pair distant (nécessiterait un id stable façon NetRegistry pour les
-	# enchantements). À faire avant d'utiliser ce ciblage en multijoueur.
+	# CardData (enchantement/rituel) ou Hero (effet "EnemyAny" ciblant le héros
+	# ennemi, ex: Souffle Nécrotique, Don de Chair) n'est donc PAS encore
+	# synchronisée au pair distant (nécessiterait un id stable façon NetRegistry
+	# pour les enchantements, et un flag dédié pour le héros). À faire avant
+	# d'utiliser ce ciblage en multijoueur.
 	if battle.net_emitter != null:
 		var ids: Array = battle.net_registry.end_capture()
 		battle.net_emitter.play_card(card_data, row, insert_index,
@@ -195,6 +203,7 @@ func resolve_with_target(card_data: CardData, row: String, insert_index: int, ta
 	battle.reset_targeting_state()
 	if battle.tutorial_manager:
 		await battle.tutorial_manager.notify_card_played(card_data)
+	await battle.check_auto_pass_turn()
 
 func _resolve(card_data: CardData, row: String, insert_index: int) -> void:
 	if battle.net_emitter != null:

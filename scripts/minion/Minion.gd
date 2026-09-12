@@ -97,6 +97,14 @@ var triggers_used_this_turn: Dictionary = {}
 var is_mimicking: bool = false
 var mimicked_trigger_types: Array = []
 var mimicked_effects: Array = []
+# Déguisement visuel (L'Innommable) : carte dont l'apparence (art, nom,
+# description) doit être affichée à la place de `card_data`, sans jamais
+# remplacer `card_data` lui-même (qui reste la Resource partagée servant à
+# calculer coût/race/stats de base). Nul = aucun déguisement, afficher `card_data`.
+var display_card_override: CardData = null
+
+func get_display_card() -> CardData:
+	return display_card_override if display_card_override != null else card_data
 
 # ─── Mode Arena uniquement (voir scripts/arena/) ──────────────────────────────
 # Niveau d'étoile après fusion de 3 copies identiques (ArenaMergeSystem).
@@ -192,7 +200,9 @@ func remove_human_keyword(keyword: int) -> void:
 	human_keywords.erase(keyword)
 
 func is_infection_immune() -> bool:
-	return has_undead_keyword(KeywordUndead.Type.CHAIR_MORTE) or infection_immune_aura
+	return has_undead_keyword(KeywordUndead.Type.CHAIR_MORTE) \
+		or has_human_keyword(KeywordHuman.Type.DISCIPLINE) \
+		or infection_immune_aura
 
 func has_undead_keyword(keyword: int) -> bool:
 	return keyword in undead_keywords
@@ -223,9 +233,13 @@ func is_heal_immune() -> bool:
 
 # ─── Corruption / immunités Démon ─────────────────────────────────────────────
 
-# CHAIR DE SOUFRE : immunisé à Corruption, à la peur (TERREUR) et au contrôle mental.
+# CHAIR DE SOUFRE (Démon), CHAIR MORTE (Mort-Vivant) et DISCIPLINE (Humain)
+# sont tous trois immunisés à Corruption (effets néfastes raciaux, pas les
+# débuffs de stats génériques ni le Gel).
 func is_corruption_immune() -> bool:
-	return has_demon_keyword(KeywordDemon.Type.CHAIR_DE_SOUFRE)
+	return has_demon_keyword(KeywordDemon.Type.CHAIR_DE_SOUFRE) \
+		or has_undead_keyword(KeywordUndead.Type.CHAIR_MORTE) \
+		or has_human_keyword(KeywordHuman.Type.DISCIPLINE)
 
 # Peur : CHAIR MORTE (Mort-Vivant), DISCIPLINE (Humain) et CHAIR DE SOUFRE (Démon)
 # y sont tous trois immunisés d'après leurs définitions.
@@ -233,6 +247,16 @@ func is_fear_immune() -> bool:
 	return has_undead_keyword(KeywordUndead.Type.CHAIR_MORTE) \
 		or has_human_keyword(KeywordHuman.Type.DISCIPLINE) \
 		or has_demon_keyword(KeywordDemon.Type.CHAIR_DE_SOUFRE)
+
+# Applique Terreur à ce serviteur (ne peut pas attaquer lors du prochain tour
+# de son contrôleur), sauf s'il y est immunisé (CHAIR MORTE/DISCIPLINE/CHAIR
+# DE SOUFRE). Retourne true si Terreur a bien été appliquée (pour déclencher
+# l'animation côté appelant).
+func apply_terror() -> bool:
+	if is_dead() or is_fear_immune():
+		return false
+	terror_turns = max(terror_turns, 1)
+	return true
 
 func is_mind_control_immune() -> bool:
 	return has_human_keyword(KeywordHuman.Type.DISCIPLINE) \
@@ -244,3 +268,9 @@ func apply_corruption(stacks: int = 1) -> void:
 		return
 	corruption_stacks += stacks
 	base_attack = max(0, base_attack - stacks)
+
+# Retire tous les marqueurs de Corruption et restaure l'ATK perdue (Inquisiteur
+# Suprême, Purification).
+func cure_corruption() -> void:
+	base_attack += corruption_stacks
+	corruption_stacks = 0

@@ -30,6 +30,11 @@ func process_deaths(silent: Array = []) -> void:
 	var dead_all:    Array[Minion] = []
 	dead_all.append_array(dead_player)
 	dead_all.append_array(dead_enemy)
+	# Succès Steam "Exécuteur" (voir AchievementManager) : ne compte que les
+	# morts ennemies survenant pendant le tour du joueur local.
+	if not dead_enemy.is_empty() and not battle.enemy_turn_active:
+		battle.player_kills_this_turn += dead_enemy.size()
+		AchievementManager.on_enemy_kills_this_turn(battle.player_kills_this_turn)
 	if dead_all.is_empty():
 		processing_deaths = false
 		# Si REVENANT a relevé un serviteur (health 0 → 1) sans qu'aucune mort ne
@@ -104,12 +109,12 @@ func _animate_deaths(dead_minions: Array[Minion], silent: Array = []) -> void:
 		battle.board_visual_system.remove_visual(minion)
 
 func _send_to_graveyards(dead_player: Array[Minion], dead_enemy: Array[Minion]) -> void:
-	# Les serviteurs "retirés du jeu" (Possédé Hurlant) ne vont pas au cimetière.
+	# Les serviteurs "retirés du jeu" (Possédé Hurlant) et les jetons ne vont pas au cimetière.
 	for minion in dead_player:
-		if not minion.card_data.exile_on_death:
+		if not minion.card_data.exile_on_death and not minion.card_data.is_token:
 			battle.player_graveyard.add_minion(minion.card_data)
 	for minion in dead_enemy:
-		if not minion.card_data.exile_on_death:
+		if not minion.card_data.exile_on_death and not minion.card_data.is_token:
 			battle.enemy_graveyard.add_minion(minion.card_data)
 
 func _trigger_deathrattle(dead_minions: Array[Minion]) -> void:
