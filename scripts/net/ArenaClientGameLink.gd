@@ -16,6 +16,13 @@ class_name ArenaClientGameLink
 # possible, l'hôte — voir ArenaNetTransport) mais conservé explicitement,
 # correct et prêt pour une future topologie où ce ne serait plus vrai.
 
+# Émis après CHAQUE BOARD_SYNC ou PRIVATE_STATE_SYNC appliqué (plateau d'un
+# siège quelconque, ou sa propre main/boutique/or) — point d'accroche unique
+# pour une UI qui veut simplement se rafraîchir sans avoir à distinguer les
+# deux, contrairement à round_advanced/game_over, des évènements de plus haut
+# niveau qu'une UI peut vouloir traiter différemment (ex. afficher le résumé
+# de combat, montrer l'écran de fin de partie).
+signal state_changed
 # Émis quand l'hôte diffuse ROUND_ADVANCED (combat résolu, partie pas
 # terminée) — round_number déjà appliqué à match_ au moment du signal.
 signal round_advanced(round_number: int, combat_log: Array)
@@ -41,11 +48,13 @@ func _on_command_received(_peer_id: int, command: Dictionary) -> void:
 	match ArenaGameCommand.type_of(command):
 		ArenaGameCommand.BOARD_SYNC:
 			ArenaRemoteBoardMirror.apply(match_, command)
+			state_changed.emit()
 		ArenaGameCommand.PRIVATE_STATE_SYNC:
 			if int(command.get("seat_id", -1)) == own_seat_id:
 				var player: ArenaPlayerState = match_.find_by_seat(own_seat_id)
 				if player != null:
 					ArenaPrivateStateMirror.apply(player, command)
+					state_changed.emit()
 		ArenaGameCommand.ROUND_ADVANCED:
 			match_.round_number = int(command.get("round_number", match_.round_number))
 			round_advanced.emit(match_.round_number, command.get("combat_log", []))

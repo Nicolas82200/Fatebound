@@ -80,6 +80,18 @@ func start() -> void:
 func seat_for_peer(peer_id: int) -> int:
 	return int(_seat_by_peer.get(peer_id, -1))
 
+# Hôte uniquement : correspondance inverse — peer_id du vrai client occupant
+# ce siège, ou -1 si c'est l'hôte lui-même (seat 0), un bot
+# (force_start_with_bots) ou un seat_id inconnu. Indispensable pour envoyer
+# un message PRIVÉ (PRIVATE_STATE_SYNC) à un siège précis en dehors du flot
+# REQUEST_* -> réponse déjà couvert par ArenaHostGameRouter — notamment au
+# début de chaque manche (voir ArenaHostRoundSync.broadcast_new_round).
+func peer_for_seat(seat_id: int) -> int:
+	for peer_id in _seat_by_peer:
+		if _seat_by_peer[peer_id] == seat_id:
+			return peer_id
+	return -1
+
 func cancel() -> void:
 	if _finished:
 		return

@@ -175,3 +175,22 @@ func test_seat_for_peer_resolves_a_registered_client_and_minus_one_otherwise() -
 	assert_eq(host_handshake.seat_for_peer(100), 1)
 	assert_eq(host_handshake.seat_for_peer(101), 2)
 	assert_eq(host_handshake.seat_for_peer(999), -1, "un peer_id inconnu doit renvoyer -1")
+
+func test_peer_for_seat_is_the_exact_inverse_of_seat_for_peer() -> void:
+	var rig: Dictionary = _build_rig(2)
+	var host_handshake: ArenaNetHandshake = rig.host_handshake
+	assert_eq(host_handshake.peer_for_seat(1), 100)
+	assert_eq(host_handshake.peer_for_seat(2), 101)
+
+func test_peer_for_seat_returns_minus_one_for_the_host_seat_and_for_bots() -> void:
+	var rig: Dictionary = _build_rig(1)
+	var host_handshake: ArenaNetHandshake = rig.host_handshake
+	host_handshake.force_start_with_bots()
+	assert_eq(host_handshake.peer_for_seat(0), -1, "le siège 0 (hôte) n'a pas de peer_id réel")
+	var bot_entry = null
+	for entry in rig.results["host"]["roster"]:
+		if entry["is_bot"]:
+			bot_entry = entry
+			break
+	assert_not_null(bot_entry, "force_start_with_bots doit avoir ajouté au moins un bot")
+	assert_eq(host_handshake.peer_for_seat(bot_entry["seat_id"]), -1, "un siège bot n'a pas de peer_id réel")

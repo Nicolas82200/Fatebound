@@ -82,6 +82,37 @@ func test_private_state_sync_for_another_seat_is_never_applied_to_my_own_player(
 
 	assert_eq(me.gold, gold_before, "un PRIVATE_STATE_SYNC destiné à un autre siège ne doit jamais toucher le mien")
 
+func test_state_changed_fires_for_board_sync_and_private_state_sync() -> void:
+	var net := _build_client_net()
+	var m := _make_match()
+	var link := ArenaClientGameLink.new(m, net, 1, 1)
+	autofree(link)
+
+	# Array plutôt qu'un int : une lambda GDScript capture un int par valeur
+	# (copie figée au moment de la connexion), pas par référence — incrémenter
+	# une variable locale scalaire depuis l'intérieur ne serait jamais visible
+	# ici. Un Array, lui, est capturé par référence (même objet partagé).
+	var fire_count: Array = [0]
+	link.state_changed.connect(func() -> void: fire_count[0] += 1)
+
+	net.command_received.emit(1, ArenaGameCommand.board_sync(0, 10, [], []))
+	net.command_received.emit(1, ArenaGameCommand.private_state_sync(1, 5, 0, 1, false, [], [], []))
+
+	assert_eq(fire_count[0], 2, "chaque BOARD_SYNC et PRIVATE_STATE_SYNC appliqué doit déclencher state_changed")
+
+func test_state_changed_does_not_fire_for_a_private_state_sync_targeting_another_seat() -> void:
+	var net := _build_client_net()
+	var m := _make_match()
+	var link := ArenaClientGameLink.new(m, net, 1, 1)
+	autofree(link)
+
+	var fire_count: Array = [0]
+	link.state_changed.connect(func() -> void: fire_count[0] += 1)
+
+	net.command_received.emit(1, ArenaGameCommand.private_state_sync(0, 999, 0, 1, false, [], [], []))
+
+	assert_eq(fire_count[0], 0, "un PRIVATE_STATE_SYNC ignoré (pas le mien) ne doit pas déclencher de rafraîchissement")
+
 func test_round_advanced_updates_the_round_number_and_emits_the_combat_log() -> void:
 	var net := _build_client_net()
 	var m := _make_match()
