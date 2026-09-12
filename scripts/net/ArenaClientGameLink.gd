@@ -16,6 +16,12 @@ class_name ArenaClientGameLink
 # possible, l'hôte — voir ArenaNetTransport) mais conservé explicitement,
 # correct et prêt pour une future topologie où ce ne serait plus vrai.
 
+# Émis quand l'hôte diffuse ROUND_ADVANCED (combat résolu, partie pas
+# terminée) — round_number déjà appliqué à match_ au moment du signal.
+signal round_advanced(round_number: int, combat_log: Array)
+# Émis quand l'hôte diffuse GAME_OVER (un seul survivant).
+signal game_over(ranking: Array)
+
 var match_: ArenaMatch
 var net: ArenaNetworkManager
 var own_seat_id: int
@@ -40,3 +46,8 @@ func _on_command_received(_peer_id: int, command: Dictionary) -> void:
 				var player: ArenaPlayerState = match_.find_by_seat(own_seat_id)
 				if player != null:
 					ArenaPrivateStateMirror.apply(player, command)
+		ArenaGameCommand.ROUND_ADVANCED:
+			match_.round_number = int(command.get("round_number", match_.round_number))
+			round_advanced.emit(match_.round_number, command.get("combat_log", []))
+		ArenaGameCommand.GAME_OVER:
+			game_over.emit(command.get("ranking", []))

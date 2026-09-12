@@ -81,3 +81,34 @@ func test_private_state_sync_for_another_seat_is_never_applied_to_my_own_player(
 	net.command_received.emit(1, command)
 
 	assert_eq(me.gold, gold_before, "un PRIVATE_STATE_SYNC destiné à un autre siège ne doit jamais toucher le mien")
+
+func test_round_advanced_updates_the_round_number_and_emits_the_combat_log() -> void:
+	var net := _build_client_net()
+	var m := _make_match()
+	var link := ArenaClientGameLink.new(m, net, 1, 1)
+	autofree(link)
+
+	var received: Array = []
+	link.round_advanced.connect(func(round_number: int, combat_log: Array) -> void: received.append([round_number, combat_log]))
+
+	net.command_received.emit(1, ArenaGameCommand.round_advanced(3, ["Hôte vs Client : égalité, aucun dégât"]))
+
+	assert_eq(m.round_number, 3)
+	assert_eq(received.size(), 1)
+	assert_eq(received[0][0], 3)
+	assert_eq(received[0][1], ["Hôte vs Client : égalité, aucun dégât"])
+
+func test_game_over_emits_the_ranking() -> void:
+	var net := _build_client_net()
+	var m := _make_match()
+	var link := ArenaClientGameLink.new(m, net, 1, 1)
+	autofree(link)
+
+	var received_ranking: Array = []
+	link.game_over.connect(func(ranking: Array) -> void: received_ranking.append(ranking))
+
+	var ranking: Array = [{"seat_id": 0, "display_name": "Hôte"}, {"seat_id": 1, "display_name": "Moi"}]
+	net.command_received.emit(1, ArenaGameCommand.game_over(ranking))
+
+	assert_eq(received_ranking.size(), 1)
+	assert_eq(received_ranking[0], ranking)

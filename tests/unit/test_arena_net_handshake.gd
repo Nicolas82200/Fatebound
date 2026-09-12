@@ -82,6 +82,43 @@ func test_every_client_receives_the_same_roster_as_the_host() -> void:
 		assert_eq(rig.results["client_%d" % i]["roster"], host_roster,
 			"le roster diffusé (START_MATCH) doit être identique pour tout le monde")
 
+func test_roster_marks_real_seats_as_not_bot() -> void:
+	var rig: Dictionary = _build_rig(ArenaConstants.PARTICIPANT_COUNT - 1)
+	for entry in rig.results["host"]["roster"]:
+		assert_false(entry["is_bot"], "aucun siège réellement rempli par un HELLO ne doit être marqué bot")
+
+func test_force_start_with_bots_fills_every_remaining_seat_and_starts_immediately() -> void:
+	var rig: Dictionary = _build_rig(2)  # table loin d'être pleine
+	assert_true(rig.results.is_empty(), "la partie ne doit pas avoir démarré toute seule avec seulement 2 clients")
+	var host_handshake: ArenaNetHandshake = rig.host_handshake
+	host_handshake.force_start_with_bots()
+	assert_true(rig.results.has("host"), "force_start_with_bots doit démarrer la partie immédiatement")
+	var roster: Array = rig.results["host"]["roster"]
+	assert_eq(roster.size(), ArenaConstants.PARTICIPANT_COUNT, "les sièges vacants doivent être comblés jusqu'à la table complète")
+	var bot_count := 0
+	for entry in roster:
+		if entry["is_bot"]:
+			bot_count += 1
+	assert_eq(bot_count, ArenaConstants.PARTICIPANT_COUNT - 3, "1 hôte + 2 clients réels : le reste doit être des bots")
+	for i in 2:
+		assert_true(rig.results.has("client_%d" % i), "les clients réels déjà connectés doivent recevoir START_MATCH")
+
+func test_force_start_with_bots_is_a_no_op_once_the_match_already_started() -> void:
+	var rig: Dictionary = _build_rig(ArenaConstants.PARTICIPANT_COUNT - 1)  # déjà complète, déjà démarrée
+	var roster_before: Array = rig.results["host"]["roster"]
+	rig.host_handshake.force_start_with_bots()
+	assert_eq(rig.host_handshake._finished, true)
+	# Rien à re-diffuser : completed n'a été émis qu'une fois (déjà vérifié par
+	# les autres tests), ce test vérifie juste l'absence de plantage/second
+	# départ sur un handshake déjà terminé.
+	assert_eq(roster_before.size(), ArenaConstants.PARTICIPANT_COUNT)
+
+func test_force_start_with_bots_does_nothing_on_a_client() -> void:
+	var rig: Dictionary = _build_rig(1)
+	var client_handshake: ArenaNetHandshake = rig.client_handshakes[0]
+	client_handshake.force_start_with_bots()
+	assert_false(rig.results.has("host"), "seul l'hôte peut déclencher force_start_with_bots")
+
 func test_a_duplicated_hello_is_ignored_once_a_seat_is_assigned() -> void:
 	var rig: Dictionary = _build_rig(1)
 	var host_handshake: ArenaNetHandshake = rig.host_handshake

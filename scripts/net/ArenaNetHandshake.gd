@@ -8,7 +8,9 @@ class_name ArenaNetHandshake
 # Arena), combine une contribution de graine RNG par pair (XOR — même principe
 # que NetHandshake : aucun pair ne peut choisir seul la graine finale) et ne
 # démarre la partie qu'une fois la table complète
-# (ArenaConstants.PARTICIPANT_COUNT - 1 clients connectés).
+# (ArenaConstants.PARTICIPANT_COUNT - 1 clients connectés) — ou plus tôt si
+# l'hôte appelle force_start_with_bots() pour combler les sièges restants
+# avec des bots (utile pour tester sans réunir 7 pairs réels).
 #
 # Simplification assumée pour cette étape de fondation (contrairement à
 # NetHandshake) : pas de renvoi automatique du HELLO en cas de perte de
@@ -17,9 +19,13 @@ class_name ArenaNetHandshake
 #
 # Émis une fois la partie prête à démarrer : `setup` contient "seed" (int,
 # identique pour tous), "seat_id" (le sien), "roster" (Array de
-# {seat_id, display_name}, trié par seat_id — siège 0 = hôte).
+# {seat_id, display_name, is_bot}, trié par seat_id — siège 0 = hôte).
 signal completed(setup: Dictionary)
 signal progress(message: String)
+# Hôte uniquement : nombre de vrais joueurs connectés à cet instant (voir
+# force_start_with_bots) — permet à une UI de lobby d'afficher "3/7" sans
+# avoir à dupliquer le comptage.
+signal human_count_changed(count: int, target: int)
 
 var _net: ArenaNetworkManager
 var _is_host: bool
@@ -31,6 +37,9 @@ var _finished: bool = false
 var _seat_by_peer: Dictionary = {}          # peer_id -> seat_id
 var _display_name_by_seat: Dictionary = {}  # seat_id -> display_name
 var _seed_by_seat: Dictionary = {}          # seat_id -> contribution
+# Sièges comblés par force_start_with_bots() plutôt qu'un vrai HELLO — jamais
+# dans _seat_by_peer (aucun peer_id réel ne leur correspond).
+var _bot_seats: Dictionary = {}             # seat_id -> true
 var _next_seat_id: int = 1                  # 0 réservé à l'hôte
 
 # Client uniquement.
@@ -106,6 +115,8 @@ func _on_command_received(peer_id: int, command: Dictionary) -> void:
 # ── Côté hôte ──
 
 func _register_client(peer_id: int, command: Dictionary) -> void:
+	if _finished:
+		return  # force_start_with_bots() a déjà démarré la partie sans attendre ce pair
 	if _seat_by_peer.has(peer_id):
 		return  # HELLO dupliqué (paquet renvoyé) : siège déjà attribué, rien à refaire
 	var seat_id: int = _next_seat_id
@@ -116,8 +127,27 @@ func _register_client(peer_id: int, command: Dictionary) -> void:
 	_net.send_command(peer_id, ArenaNetCommand.seat_assign(seat_id))
 	progress.emit("Handshake Arena : « %s » a rejoint (siège %d, %d/%d)" % [
 		_display_name_by_seat[seat_id], seat_id, _seat_by_peer.size(), ArenaConstants.PARTICIPANT_COUNT - 1])
+	human_count_changed.emit(_seat_by_peer.size() + 1, ArenaConstants.PARTICIPANT_COUNT)
 	if _seat_by_peer.size() >= ArenaConstants.PARTICIPANT_COUNT - 1:
 		_start_match()
+
+# Hôte uniquement : comble les sièges encore vacants avec des bots (voir
+# ArenaBotSeatController) et démarre la partie immédiatement, sans attendre
+# ArenaConstants.PARTICIPANT_COUNT - 1 vrais joueurs — utile pour tester une
+# partie réseau sans réunir 7 pairs réels (2-3 amis + des bots, ou même seul
+# face à soi-même sur deux instances). No-op si la partie a déjà démarré ou
+# si la table est déjà complète de vrais joueurs.
+func force_start_with_bots() -> void:
+	if not _is_host or _finished:
+		return
+	var bot_number := 1
+	while _display_name_by_seat.size() < ArenaConstants.PARTICIPANT_COUNT:
+		var seat_id: int = _next_seat_id
+		_next_seat_id += 1
+		_display_name_by_seat[seat_id] = "Bot %d" % bot_number
+		_bot_seats[seat_id] = true
+		bot_number += 1
+	_start_match()
 
 func _start_match() -> void:
 	var combined_seed: int = 0
@@ -132,7 +162,11 @@ func _build_roster() -> Array:
 	seat_ids.sort()
 	var roster: Array = []
 	for seat_id in seat_ids:
-		roster.append({"seat_id": seat_id, "display_name": _display_name_by_seat[seat_id]})
+		roster.append({
+			"seat_id": seat_id,
+			"display_name": _display_name_by_seat[seat_id],
+			"is_bot": _bot_seats.has(seat_id),
+		})
 	return roster
 
 func _finish(seed: int, roster: Array) -> void:
