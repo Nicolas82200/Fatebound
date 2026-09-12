@@ -1,11 +1,12 @@
 extends RefCounted
 class_name ArenaNetCommand
 
-# Vocabulaire des commandes échangées pendant le handshake réseau Arena (voir
-# ArenaNetHandshake) — même esprit que NetCommand.gd (1v1), gardé séparé (voir
-# ArenaNetTransport) : le protocole de jeu proprement dit (achats/positionnement/
-# combat synchronisés à 8 joueurs) n'existe pas encore, seul l'échange
-# d'ouverture (qui est qui, graine RNG partagée, tous prêts) est couvert ici.
+# Vocabulaire des commandes échangées pendant le HANDSHAKE D'OUVERTURE réseau
+# Arena (voir ArenaNetHandshake) — même esprit que NetCommand.gd (1v1), gardé
+# séparé (voir ArenaNetTransport). Ne couvre que "qui est qui, graine RNG
+# partagée, tous prêts" ; le protocole de PARTIE proprement dit (achats/
+# positionnement/combat synchronisés à 8 joueurs) est un vocabulaire distinct,
+# voir ArenaGameCommand.
 
 const HELLO := "ARENA_HELLO"               # client -> hôte : nom d'affichage + contribution de graine
 const SEAT_ASSIGN := "ARENA_SEAT_ASSIGN"   # hôte -> client : seat_id attribué

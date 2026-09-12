@@ -2,16 +2,20 @@ extends RefCounted
 class_name ArenaHostAuthority
 
 # Applique côté HÔTE une REQUEST_* reçue d'un client (voir ArenaGameCommand)
-# à l'ArenaMatch AUTORITAIRE, puis produit le BOARD_SYNC public correspondant
-# à diffuser à tous (jamais la main/boutique du siège concerné, privées).
+# à l'ArenaMatch AUTORITAIRE, puis produit LES DEUX messages de résultat :
+# `result.public` (BOARD_SYNC, à diffuser à tous) et `result.private`
+# (PRIVATE_STATE_SYNC, à envoyer UNIQUEMENT au peer_id du siège concerné —
+# voir ArenaGameCommand pour pourquoi les deux sont indispensables : sans le
+# second, un client n'apprendrait jamais ce qu'il a reçu en boutique, son or
+# restant, ni même si son action a réellement réussi).
 #
 # Pur (aucun état propre) : opère sur l'ArenaMatch et le seat_id passés en
 # paramètre, comme ArenaBotDriver/ArenaEconomy. Ne valide PAS que l'appelant
 # a le droit d'agir au nom de ce seat_id (un client ne devrait envoyer de
 # REQUEST_* que pour son propre siège) — cette vérification d'autorisation
 # revient à l'appelant (le futur point d'entrée réseau qui connaît la
-# correspondance peer_id -> seat_id établie par ArenaNetHandshake), pas à
-# cette classe qui ne fait qu'exécuter une action déjà autorisée.
+# correspondance peer_id -> seat_id établie par ArenaNetHandshake.seat_for_peer),
+# pas à cette classe qui ne fait qu'exécuter une action déjà autorisée.
 
 static func apply(match_: ArenaMatch, seat_id: int, command: Dictionary) -> Dictionary:
 	var player: ArenaPlayerState = match_.find_by_seat(seat_id)
@@ -44,10 +48,13 @@ static func apply(match_: ArenaMatch, seat_id: int, command: Dictionary) -> Dict
 				player.move_on_board(to_move, bool(command.get("is_front_to", true)), int(command.get("index_to", -1)))
 		_:
 			return {}
-	return ArenaGameCommand.board_sync(
-		seat_id, player.hero_hp,
-		ArenaBoardSnapshot.serialize_row(player.board_front),
-		ArenaBoardSnapshot.serialize_row(player.board_back))
+	return {
+		"public": ArenaGameCommand.board_sync(
+			seat_id, player.hero_hp,
+			ArenaBoardSnapshot.serialize_row(player.board_front),
+			ArenaBoardSnapshot.serialize_row(player.board_back)),
+		"private": ArenaPrivateStateSnapshot.build(player),
+	}
 
 static func _hand_minion_at(player: ArenaPlayerState, index: int) -> Minion:
 	if index < 0 or index >= player.hand.size():

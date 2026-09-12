@@ -42,17 +42,34 @@ func _init(net: ArenaNetworkManager, is_host: bool, local_display_name: String) 
 	_is_host = is_host
 	_local_display_name = local_display_name
 	_net.command_received.connect(_on_command_received)
-	if not _is_host:
+	if _is_host:
+		# S'attribue immédiatement le siège 0 (jamais différé à start()) : un
+		# HELLO peut arriver dès que le premier client se connecte, avant que
+		# quoi que ce soit d'autre n'ait eu l'occasion d'appeler start() — sans
+		# ça, un HELLO traité avant cette auto-inscription aurait fait démarrer
+		# la partie sans la contribution de graine de l'hôte, invisible dans
+		# _seed_by_seat (for seat_id in _seed_by_seat ne l'aurait simplement
+		# jamais vue), et _build_roster aurait omis le siège 0.
+		_display_name_by_seat[0] = _local_display_name
+		_seed_by_seat[0] = _local_seed_contribution
+	else:
 		_net.peer_joined.connect(_on_peer_joined_as_client)
 
-# Hôte uniquement : s'attribue lui-même le siège 0. Un client n'a rien à
-# envoyer avant d'être effectivement connecté à l'hôte (voir
-# _on_peer_joined_as_client) — appeler start() ne fait donc rien côté client.
+# Ne fait plus rien côté hôte (l'auto-inscription du siège 0 a lieu dans
+# _init, voir ci-dessus) ; toujours un no-op côté client, qui n'a rien à
+# envoyer avant d'être effectivement connecté (voir _on_peer_joined_as_client).
+# Conservée pour la symétrie avec NetHandshake.start() et comme point d'entrée
+# explicite pour un futur appelant.
 func start() -> void:
-	if not _is_host:
-		return
-	_display_name_by_seat[0] = _local_display_name
-	_seed_by_seat[0] = _local_seed_contribution
+	pass
+
+# Hôte uniquement : seat_id attribué à ce peer_id (voir _register_client),
+# ou -1 s'il n'a pas encore envoyé de HELLO. Indispensable à l'appelant
+# réseau pour router une REQUEST_* entrante vers ArenaHostAuthority.apply()
+# avec le bon seat_id (voir ArenaHostAuthority) — cette correspondance
+# n'étant sinon exposée nulle part après le handshake.
+func seat_for_peer(peer_id: int) -> int:
+	return int(_seat_by_peer.get(peer_id, -1))
 
 func cancel() -> void:
 	if _finished:

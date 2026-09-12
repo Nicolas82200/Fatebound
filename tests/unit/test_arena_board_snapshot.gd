@@ -32,6 +32,20 @@ func test_deserialize_row_skips_a_rejected_card_path() -> void:
 	var row: Array[Minion] = ArenaBoardSnapshot.deserialize_row(entries, true)
 	assert_eq(row.size(), 0, "un jeton refusé par NetCardResolver ne doit produire aucun serviteur")
 
+func test_a_merged_minion_keeps_its_buffed_stats_after_a_round_trip() -> void:
+	# Régression : un serviteur fusionné (2★, voir ArenaMergeSystem) a des
+	# base_attack/base_max_health SUPÉRIEURS aux valeurs brutes de sa carte
+	# (somme des 3 copies fusionnées) — les recalculer depuis card_data côté
+	# réception lui redonnerait silencieusement ses stats 1★ de base.
+	var card: CardData = load(REAL_CARD_PATH)
+	var merged := Minion.new(card, true, "Front")
+	merged.star_level = 2
+	merged.base_attack = card.attack * 3
+	merged.base_max_health = card.health * 3
+	var rebuilt: Array[Minion] = ArenaBoardSnapshot.deserialize_row(ArenaBoardSnapshot.serialize_row([merged]), true)
+	assert_eq(rebuilt[0].base_attack, card.attack * 3, "les stats fusionnées ne doivent pas retomber sur les valeurs brutes de la carte")
+	assert_eq(rebuilt[0].base_max_health, card.health * 3)
+
 func test_serialize_then_deserialize_round_trips() -> void:
 	var card: CardData = load(REAL_CARD_PATH)
 	var original := Minion.new(card, true, "Front")

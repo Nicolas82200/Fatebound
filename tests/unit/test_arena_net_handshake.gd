@@ -90,3 +90,51 @@ func test_a_duplicated_hello_is_ignored_once_a_seat_is_assigned() -> void:
 	host_handshake._on_command_received(100, ArenaNetCommand.hello("Joueur 1 (dupliqué)", 12345))
 	assert_eq(host_handshake._seat_by_peer.size(), seats_before, "un HELLO dupliqué ne doit pas ajouter de nouveau siège")
 	assert_eq(host_handshake._next_seat_id, next_seat_before, "un HELLO dupliqué ne doit pas consommer un nouveau seat_id")
+
+# Régression : la contribution de graine de l'hôte doit être prise en compte
+# même si start() n'est jamais appelé (voir ArenaNetHandshake._init — l'auto-
+# inscription du siège 0 s'y fait désormais directement, plus d'ordre
+# d'appel à respecter entre la construction et la connexion du premier client).
+func test_host_seed_contribution_counts_even_without_calling_start() -> void:
+	var hub := FakeArenaNetHub.new()
+	var host_transport := FakeArenaNetTransport.new(hub, 1, true)
+	var host_net := ArenaNetworkManager.new()
+	autofree(host_net)
+	host_net.is_host = true
+	host_net.set_transport(host_transport)
+	var host_handshake := ArenaNetHandshake.new(host_net, true, "Hôte")
+	autofree(host_handshake)
+	# Pas d'appel à host_handshake.start() ici, volontairement.
+	host_transport.host({})
+
+	var client_transport := FakeArenaNetTransport.new(hub, 200, false)
+	var client_net := ArenaNetworkManager.new()
+	autofree(client_net)
+	client_net.is_host = false
+	client_net.set_transport(client_transport)
+	var client_handshake := ArenaNetHandshake.new(client_net, false, "Joueur 1")
+	autofree(client_handshake)
+	var results: Dictionary = {}
+	client_handshake.completed.connect(func(setup: Dictionary) -> void: results["client"] = setup)
+	client_transport.join({})
+
+	for i in ArenaConstants.PARTICIPANT_COUNT - 2:
+		var extra_transport := FakeArenaNetTransport.new(hub, 300 + i, false)
+		var extra_net := ArenaNetworkManager.new()
+		autofree(extra_net)
+		extra_net.is_host = false
+		extra_net.set_transport(extra_transport)
+		var extra_handshake := ArenaNetHandshake.new(extra_net, false, "Joueur %d" % (i + 2))
+		autofree(extra_handshake)
+		extra_transport.join({})
+
+	assert_true(results.has("client"), "la table doit quand même se remplir et démarrer sans start() côté hôte")
+	assert_eq(results["client"]["roster"].size(), ArenaConstants.PARTICIPANT_COUNT,
+		"le siège 0 (hôte) doit figurer dans le roster même sans appel explicite à start()")
+
+func test_seat_for_peer_resolves_a_registered_client_and_minus_one_otherwise() -> void:
+	var rig: Dictionary = _build_rig(2)
+	var host_handshake: ArenaNetHandshake = rig.host_handshake
+	assert_eq(host_handshake.seat_for_peer(100), 1)
+	assert_eq(host_handshake.seat_for_peer(101), 2)
+	assert_eq(host_handshake.seat_for_peer(999), -1, "un peer_id inconnu doit renvoyer -1")

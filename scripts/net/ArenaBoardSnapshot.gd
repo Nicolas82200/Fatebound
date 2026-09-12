@@ -6,9 +6,15 @@ class_name ArenaBoardSnapshot
 # (var_to_bytes ne sérialise jamais d'objets arbitraires, voir
 # ArenaNetworkManager) — on ne transmet donc que ce qu'il faut pour
 # reconstruire un Minion équivalent côté réception : sa carte (retrouvée par
-# resource_path via NetCardResolver, même mécanisme que le 1v1), son niveau
-# d'étoile (fusion) et les dégâts déjà subis (pour refléter un plateau
-# blessé après un combat, pas seulement sa composition).
+# resource_path via NetCardResolver, même mécanisme que le 1v1), ses stats de
+# base ACTUELLES, son niveau d'étoile (fusion) et les dégâts déjà subis.
+#
+# base_attack/base_max_health sont transmis explicitement et ne doivent
+# JAMAIS être recalculés depuis card_data.attack/health côté réception : une
+# fusion (ArenaMergeSystem, 2★) les fait DIVERGER des valeurs brutes de la
+# carte (somme des 3 copies fusionnées, voir ArenaMergeSystem._merge_group) —
+# reconstruire un Minion sans les transmettre lui redonnerait silencieusement
+# les stats 1★ de base malgré un star_level correct.
 #
 # Ne transmet PAS les mots-clés/bonus temporaires acquis en combat
 # (TempEffectSystem) : hors de portée de cette étape de fondation, un
@@ -21,6 +27,8 @@ static func serialize_row(row: Array) -> Array:
 		out.append({
 			"resource_path": minion.card_data.resource_path,
 			"star_level": minion.star_level,
+			"base_attack": minion.base_attack,
+			"base_max_health": minion.base_max_health,
 			"damage_taken": minion.damage_taken,
 		})
 	return out
@@ -41,6 +49,8 @@ static func deserialize_row(entries: Array, is_front: bool) -> Array[Minion]:
 			continue
 		var minion := Minion.new(card_data, true, "Front" if is_front else "Back")
 		minion.star_level = int(entry.get("star_level", 1))
+		minion.base_attack = int(entry.get("base_attack", card_data.attack))
+		minion.base_max_health = int(entry.get("base_max_health", card_data.health))
 		minion.damage_taken = int(entry.get("damage_taken", 0))
 		row.append(minion)
 	return row

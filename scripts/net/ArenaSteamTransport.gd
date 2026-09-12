@@ -265,14 +265,23 @@ func _on_network_connection_status_changed(connect_handle: int, connection: Dict
 				_steam.closeConnection(connect_handle, 0, "unexpected peer", false)
 				return
 			if _connections_by_steam_id.has(remote_id):
-				# Reconnexion d'un pair déjà connecté (ex. coupure transitoire) :
-				# ferme l'ancienne connexion, orpheline, avant d'accepter la
-				# nouvelle — sans ça, _steam_id_by_connection garderait une
-				# entrée pointant vers un handle mort.
+				# Reconnexion d'un pair déjà connecté (ex. coupure transitoire,
+				# détectée par le client avant que l'hôte n'ait lui-même reçu
+				# CONN_STATE_CLOSED_BY_PEER pour l'ancienne connexion) : ferme
+				# l'ancienne, orpheline, avant d'accepter la nouvelle — sans ça,
+				# _steam_id_by_connection garderait une entrée pointant vers un
+				# handle mort. Volontairement PAS de vérification de capacité
+				# ici : ce pair occupe déjà un siège, cette connexion ne fait que
+				# le remplacer, jamais en prendre un nouveau — sans ce `elif`
+				# (plutôt qu'un `if` séparé), une table exactement pleine
+				# rejetait à tort la reconnexion d'un pair qui y avait déjà sa
+				# place (son propre ancien handle, encore compté dans .size()
+				# puisque seul _steam_id_by_connection était nettoyé ci-dessus,
+				# faisait lui-même passer le seuil "table complète").
 				var stale_handle: int = _connections_by_steam_id[remote_id]
 				_steam_id_by_connection.erase(stale_handle)
 				_steam.closeConnection(stale_handle, 0, "", false)
-			if _connections_by_steam_id.size() >= ArenaConstants.PARTICIPANT_COUNT - 1:
+			elif _connections_by_steam_id.size() >= ArenaConstants.PARTICIPANT_COUNT - 1:
 				status.emit("Steam (Arena) : connexion P2P refusée (table déjà complète)")
 				_steam.closeConnection(connect_handle, 0, "table full", false)
 				return
